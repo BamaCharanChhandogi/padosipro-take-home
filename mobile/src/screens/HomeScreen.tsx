@@ -63,7 +63,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // WhatsApp Lifestyle Manager redirect with personalized task context
   const handleOpenWhatsAppChat = () => {
-    const whatsappNumber = "919876543210";
+    const whatsappNumber = "916295474539";
     const tasksList =
       selectedTasks.length > 0
         ? selectedTasks.map((t) => t.name).join(", ")

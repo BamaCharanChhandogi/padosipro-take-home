@@ -107,7 +107,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
                 {
                   text: "Message LM on WhatsApp",
                   onPress: () => {
-                    const whatsappNumber = "919876543210";
+                    const whatsappNumber = "916295474539";
                     const msg = encodeURIComponent(
                       `Hi Pilot LM! I would like to coordinate household members for ${userName} (${phoneNumber}).`
                     );

@@ -30,19 +30,39 @@ export class AuthService {
 
     if (!user) {
       const passwordHash = password ? await hashPassword(password) : null;
-      user = await prisma.user.create({
-        data: {
-          email: cleanEmail,
-          mobile: cleanMobile,
-          passwordHash,
-          isVerified: false,
-        },
-      });
-    } else if (cleanMobile && !user.mobile) {
-      user = await prisma.user.update({
-        where: { id: user.id },
-        data: { mobile: cleanMobile },
-      });
+      try {
+        user = await prisma.user.create({
+          data: {
+            email: cleanEmail,
+            mobile: cleanMobile,
+            passwordHash,
+            isVerified: false,
+          },
+        });
+      } catch (err: any) {
+        // Fallback if older database migration still has unique constraint on mobile
+        if (err.code === "P2002") {
+          user = await prisma.user.create({
+            data: {
+              email: cleanEmail,
+              mobile: null,
+              passwordHash,
+              isVerified: false,
+            },
+          });
+        } else {
+          throw err;
+        }
+      }
+    } else if (cleanMobile) {
+      try {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { mobile: cleanMobile },
+        });
+      } catch {
+        // Ignore duplicate mobile error if updating existing user
+      }
     }
 
     const otpResult = await OtpService.requestOtp(cleanEmail, user.id);

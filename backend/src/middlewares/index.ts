@@ -59,8 +59,29 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
     message = err.issues.map((i: any) => i.message).join(". ");
   }
 
+  // Gracefully handle Prisma unique constraint violations (P2002)
+  if (err.code === "P2002") {
+    statusCode = 409;
+    code = "DUPLICATE_ENTRY";
+    const target = Array.isArray(err.meta?.target) ? err.meta.target.join(", ") : (err.meta?.target || "");
+    if (target.includes("mobile")) {
+      message = "This mobile number is already registered. Please check or log in.";
+    } else if (target.includes("email")) {
+      message = "An account with this email address already exists.";
+    } else {
+      message = "A record with these details already exists.";
+    }
+  }
+
+  // Sanitize any internal database/Prisma errors from leaking to user
+  if (err.name?.includes("Prisma") || message.includes("prisma.") || message.includes("invocation:")) {
+    statusCode = statusCode === 500 ? 400 : statusCode;
+    message = "Unable to process request with provided details. Please check your inputs.";
+  }
+
   if (statusCode === 500) {
     console.error("Unhandled error:", err);
+    message = "An unexpected server error occurred. Please try again in a moment.";
   }
 
   res.status(statusCode).json({

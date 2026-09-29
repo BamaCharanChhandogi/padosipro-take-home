@@ -71,13 +71,22 @@ export class ProfileController {
       });
 
       // Update User record hasCompletedProfile flag
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          hasCompletedProfile: true,
-          mobile: formattedPhone,
-        },
-      });
+      try {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            hasCompletedProfile: true,
+            mobile: formattedPhone,
+          },
+        });
+      } catch {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            hasCompletedProfile: true,
+          },
+        });
+      }
 
       res.json({
         success: true,

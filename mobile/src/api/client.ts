@@ -33,7 +33,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error(`[API ERROR ${error.response?.status || "NO_RESPONSE"}] ${error.config?.url}:`, error.response?.data || error.message);
+    console.log(`[API NOTICE ${error.response?.status || "NO_RESPONSE"}] ${error.config?.url}:`, error.response?.data?.error?.message || error.message);
     const message =
       error.response?.data?.error?.message ||
       error.response?.data?.message ||

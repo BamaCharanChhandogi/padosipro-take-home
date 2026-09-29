@@ -49,6 +49,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         navigation.navigate("OtpVerification", {
           email: email.trim(),
           mobile: cleanMobile,
+          devOtp: res.data?.data?.otpCode,
         });
       }
     } catch (err: any) {

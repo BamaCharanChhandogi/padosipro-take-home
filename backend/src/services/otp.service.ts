@@ -67,6 +67,7 @@ export class OtpService {
       otpId: newOtpRecord.id,
       expiresAt,
       cooldownSeconds: config.otp.resendCooldownSeconds,
+      otpCode: rawOtp,
       // For local testing convenience in automated environments if headers present
       ...(process.env.NODE_ENV === "test" ? { debugOtp: rawOtp } : {}),
     };

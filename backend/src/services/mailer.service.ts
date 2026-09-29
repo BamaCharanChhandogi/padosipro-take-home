@@ -11,9 +11,9 @@ export async function getMailTransporter(): Promise<nodemailer.Transporter> {
       host: config.smtp.host,
       port: config.smtp.port,
       secure: config.smtp.secure,
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
       auth: {
         user: config.smtp.user,
         pass: config.smtp.pass,

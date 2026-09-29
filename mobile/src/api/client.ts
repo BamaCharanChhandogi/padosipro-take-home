@@ -8,13 +8,12 @@ import { Storage } from "../utils/storage";
 // 3. Android Emulator (10.0.2.2:5000)
 // 4. Fallback localhost:5000
 
-export const PUBLIC_API_URL = "https://loose-heads-leave.loca.lt/api";
+export const PUBLIC_API_URL = "https://padosipro-take-home.onrender.com/api";
 export const LAN_API_URL = "http://192.168.0.101:5000/api";
 export const EMULATOR_API_URL = "http://10.0.2.2:5000/api";
 
-// Default to LAN URL which is ultra-fast and direct when phone & computer are on same Wi-Fi,
-// with automatic fallback to public tunnel if LAN fails.
-let currentBaseUrl = LAN_API_URL;
+// Default to live Render cloud backend URL so standalone APK & evaluators work anywhere!
+let currentBaseUrl = PUBLIC_API_URL;
 
 export const apiClient = axios.create({
   baseURL: currentBaseUrl,

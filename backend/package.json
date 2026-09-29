@@ -11,6 +11,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "test": "jest --detectOpenHandles --runInBand --testTimeout=15000"
   },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.19.1",
     "bcryptjs": "^2.4.3",

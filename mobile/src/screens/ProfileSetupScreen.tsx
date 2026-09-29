@@ -27,6 +27,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
   const [society, setSociety] = useState(user?.profile?.society || "");
   const [flatUnit, setFlatUnit] = useState(user?.profile?.flatUnit || "");
   const [entryNotes, setEntryNotes] = useState(user?.profile?.entryNotes || "");
+  const [phone, setPhone] = useState(user?.profile?.phone || user?.mobile || "");
   const [businessName, setBusinessName] = useState(user?.profile?.businessName || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +49,14 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
       setLoading(true);
       setError(null);
 
-      const phoneToUse = user?.profile?.phone || user?.mobile || "+916295474539";
+      let cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone.startsWith("91") && cleanPhone.length === 12) {
+        cleanPhone = cleanPhone.slice(2);
+      } else if (cleanPhone.startsWith("0") && cleanPhone.length === 11) {
+        cleanPhone = cleanPhone.slice(1);
+      }
+
+      const phoneToUse = cleanPhone.length === 10 ? `+91${cleanPhone}` : (user?.profile?.phone || user?.mobile || "");
 
       const res = await apiClient.post("/profile", {
         fullName: fullName.trim(),
@@ -102,6 +110,21 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
             }}
             placeholder="As you would like us to use"
           />
+
+          {!user?.mobile && !user?.profile?.phone && (
+            <InputField
+              label="Phone number (optional)"
+              prefix="+91"
+              value={phone}
+              onChangeText={(text) => {
+                setPhone(text);
+                if (error) setError(null);
+              }}
+              placeholder="9876543210"
+              keyboardType="phone-pad"
+              maxLength={13}
+            />
+          )}
 
           <InputField
             label="Address & area"

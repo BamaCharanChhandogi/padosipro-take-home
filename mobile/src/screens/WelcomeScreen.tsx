@@ -20,35 +20,52 @@ interface WelcomeScreenProps {
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
-  const [mobile, setMobile] = useState("6295474539");
-  const [email, setEmail] = useState("b.c.chhandogi@gmail.com");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGetOtp = async () => {
     setError(null);
-    if (!email.trim() || !email.includes("@")) {
-      setError("Please enter a valid email address");
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Email validation: required & must be valid format
+    if (!cleanEmail) {
+      setError("Please enter your email address to receive OTP");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setError("Please enter a valid email address (e.g. name@example.com)");
       return;
     }
 
-    const cleanMobile = mobile.trim();
-    if (cleanMobile && !/^\d{10}$/.test(cleanMobile)) {
-      setError("Please enter a valid 10-digit mobile number");
-      return;
+    // 2. Mobile validation: optional, but if entered, must be valid 10 digits
+    let cleanMobile = mobile.replace(/\D/g, "");
+    if (cleanMobile.startsWith("91") && cleanMobile.length === 12) {
+      cleanMobile = cleanMobile.slice(2);
+    } else if (cleanMobile.startsWith("0") && cleanMobile.length === 11) {
+      cleanMobile = cleanMobile.slice(1);
+    }
+
+    if (cleanMobile.length > 0) {
+      if (cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile)) {
+        setError("Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)");
+        return;
+      }
     }
 
     try {
       setLoading(true);
       const res = await apiClient.post("/auth/request-otp", {
-        email: email.trim(),
+        email: cleanEmail,
         mobile: cleanMobile ? `+91${cleanMobile}` : undefined,
       });
 
       if (res.data?.success) {
         navigation.navigate("OtpVerification", {
-          email: email.trim(),
-          mobile: cleanMobile,
+          email: cleanEmail,
+          mobile: cleanMobile || undefined,
         });
       }
     } catch (err: any) {
@@ -89,22 +106,30 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
             )}
 
             <InputField
-              label="Mobile number"
+              label="Mobile number (optional)"
               prefix="+91"
               value={mobile}
-              onChangeText={setMobile}
-              placeholder="6295474539"
+              onChangeText={(text) => {
+                setMobile(text);
+                if (error) setError(null);
+              }}
+              placeholder="9876543210"
               keyboardType="phone-pad"
+              maxLength={13}
               leftIcon={<Ionicons name="call-outline" size={18} color={Colors.textSecondary} />}
             />
 
             <InputField
               label="Email"
               value={email}
-              onChangeText={setEmail}
-              placeholder="b.c.chhandogi@gmail.com"
+              onChangeText={(text) => {
+                setEmail(text);
+                if (error) setError(null);
+              }}
+              placeholder="name@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
               leftIcon={<Ionicons name="mail-outline" size={18} color={Colors.textSecondary} />}
             />
 

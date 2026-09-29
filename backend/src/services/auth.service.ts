@@ -22,7 +22,7 @@ export class AuthService {
    */
   static async requestAccessOtp(email: string, mobile?: string, password?: string) {
     const cleanEmail = email.toLowerCase().trim();
-    const cleanMobile = mobile ? mobile.replace(/\s+/g, "") : null;
+    const cleanMobile = mobile && mobile.trim().length > 0 ? mobile.replace(/\s+/g, "") : null;
 
     let user = await prisma.user.findUnique({
       where: { email: cleanEmail },

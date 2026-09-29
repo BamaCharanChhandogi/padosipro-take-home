@@ -56,7 +56,7 @@ export class OtpService {
       },
     });
 
-    console.log(`[OTP] Generated OTP for ${cleanEmail}: ${rawOtp} (Master demo bypass: 123456)`);
+    console.log(`[OTP] Generated OTP for ${cleanEmail}: ${rawOtp}`);
 
     // Dispatch email asynchronously so the HTTP response returns immediately without hanging
     sendOtpEmail(cleanEmail, rawOtp).catch((err) => {
@@ -67,7 +67,6 @@ export class OtpService {
       otpId: newOtpRecord.id,
       expiresAt,
       cooldownSeconds: config.otp.resendCooldownSeconds,
-      otpCode: rawOtp,
       // For local testing convenience in automated environments if headers present
       ...(process.env.NODE_ENV === "test" ? { debugOtp: rawOtp } : {}),
     };
@@ -112,11 +111,10 @@ export class OtpService {
       throw new AppError("Too many incorrect attempts. This code is now invalid. Please request a new code.", 429, "MAX_ATTEMPTS_EXCEEDED");
     }
 
-    // Compare hash or support demo master code (123456) for cloud environments where outbound SMTP is blocked
+    // Compare hash strictly against database record
     const inputHash = hashOtp(inputCode);
-    const isMasterCode = inputCode === "123456";
 
-    if (!isMasterCode && inputHash !== latestOtp.codeHash) {
+    if (inputHash !== latestOtp.codeHash) {
       const updatedOtp = await prisma.otp.update({
         where: { id: latestOtp.id },
         data: { attempts: { increment: 1 } },

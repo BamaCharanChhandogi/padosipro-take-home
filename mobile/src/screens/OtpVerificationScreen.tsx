@@ -28,7 +28,7 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { email, devOtp } = route.params || {};
+  const { email } = route.params || {};
   const { loginWithToken } = useAuth();
 
   const [otpCode, setOtpCode] = useState("");
@@ -147,18 +147,6 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
             </View>
           )}
 
-          {/* Quick Reviewer / Tester Code Assistant */}
-          <TouchableOpacity
-            style={styles.hintBox}
-            activeOpacity={0.7}
-            onPress={() => setOtpCode(devOtp || "123456")}
-          >
-            <Ionicons name="key-outline" size={16} color={Colors.primaryGreen} />
-            <Text style={styles.hintText}>
-              Reviewer / Demo code: <Text style={{ fontWeight: "700" }}>{devOtp || "123456"}</Text> (Tap to auto-fill)
-            </Text>
-          </TouchableOpacity>
-
           <Text style={styles.fieldLabel}>6-digit code</Text>
 
           {/* Guaranteed Focus Tap Area */}
@@ -274,23 +262,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: Colors.errorText,
-    fontSize: 13,
-    flex: 1,
-  },
-  hintBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F0FDF4",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-    gap: 8,
-  },
-  hintText: {
-    color: Colors.primaryGreen,
     fontSize: 13,
     flex: 1,
   },

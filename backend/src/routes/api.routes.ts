@@ -22,6 +22,18 @@ apiRouter.post("/auth/resend-otp", AuthController.resendOtp);
 apiRouter.post("/auth/login", AuthController.login);
 apiRouter.get("/auth/me", requireAuth, AuthController.getMe);
 
+// Direct email delivery test route for diagnostics
+apiRouter.post("/auth/test-email", async (req, res) => {
+  const { sendOtpEmail } = await import("../services/mailer.service");
+  const targetEmail = req.body?.email || "b.c.chhandogi@gmail.com";
+  try {
+    const success = await sendOtpEmail(targetEmail, "849201");
+    res.json({ success, email: targetEmail, message: "Email dispatch completed" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
 // Profile routes
 apiRouter.get("/profile", requireAuth, ProfileController.getProfile);
 apiRouter.post("/profile", requireAuth, ProfileController.saveProfile);

@@ -400,14 +400,19 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
         >
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <View>
+              <View style={styles.modalTitleContainer}>
                 <Text style={styles.modalTitle}>Confirm Your Requests</Text>
                 <Text style={styles.modalSubtitle}>
                   Your Lifestyle Manager (Pilot LM) will coordinate these tasks.
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setShowConfirmModal(false)}>
-                <Ionicons name="close-circle-outline" size={26} color={Colors.textMuted} />
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowConfirmModal(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={20} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -474,14 +479,19 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
         >
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <View style={{ flex: 1 }}>
+              <View style={styles.modalTitleContainer}>
                 <Text style={styles.modalTitle}>Custom Errand Request</Text>
                 <Text style={styles.modalSubtitle}>
                   Describe what you need. Pilot LM will coordinate it immediately.
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setShowCustomModal(false)}>
-                <Ionicons name="close-circle-outline" size={26} color={Colors.textMuted} />
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowCustomModal(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={20} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -829,6 +839,10 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 16,
   },
+  modalTitleContainer: {
+    flex: 1,
+    paddingRight: 12,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: "800",
@@ -837,6 +851,16 @@ const styles = StyleSheet.create({
   modalSubtitle: {
     fontSize: 13,
     color: Colors.textSecondary,
+    marginTop: 2,
+    lineHeight: 18,
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 2,
   },
   selectedTasksHeader: {

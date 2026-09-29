@@ -12,8 +12,9 @@ export const apiClient = axios.create({
   },
 });
 
-// Request interceptor to inject JWT token
+// Request interceptor to inject JWT token and log API calls
 apiClient.interceptors.request.use(async (config) => {
+  console.log(`[API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.data || "");
   try {
     const token = await Storage.getItem("@padosipro_jwt_token");
     if (token && config.headers) {
@@ -25,10 +26,14 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response error handler
+// Response error handler and logger
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`[API SUCCESS ${response.status}] ${response.config.url}:`, response.data);
+    return response;
+  },
   (error) => {
+    console.error(`[API ERROR ${error.response?.status || "NO_RESPONSE"}] ${error.config?.url}:`, error.response?.data || error.message);
     const message =
       error.response?.data?.error?.message ||
       error.response?.data?.message ||

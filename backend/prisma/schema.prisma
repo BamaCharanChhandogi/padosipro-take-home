@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique
+  mobile               String?       @unique
+  passwordHash         String?
+  isVerified           Boolean       @default(false)
+  hasCompletedProfile  Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  otps                 Otp[]
+  profile              Profile?
+  selectedTasks        UserTask[]
+}
+
+model Otp {
+  id                   String        @id @default(uuid())
+  userId               String?
+  email                String
+  codeHash             String        // SHA-256 hash of the 6-digit code
+  attempts             Int           @default(0) // Max 5 wrong attempts
+  expiresAt            DateTime      // 10 minutes validity
+  resendCooldownUntil  DateTime      // 30 seconds cooldown
+  isUsed               Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+
+  user                 User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id                   String        @id @default(uuid())
+  userId               String        @unique
+  fullName             String
+  phone                String        // Indian +91 format, 10 digits
+  addressArea          String        // "Road, area, landmark"
+  society              String?       // "Name as on the gate"
+  flatUnit             String?       // "e.g. Tower B, 1204"
+  entryNotes           String?       // "Anything the team should know at entry"
+  businessName         String?       // Optional - explained why in DESIGN.md
+  city                 String        @default("Mumbai")
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id                   String        @id
+  name                 String
+  description          String
+  icon                 String
+  displayOrder         Int           @default(0)
+
+  tasks                Task[]
+}
+
+model Task {
+  id                   String        @id @default(uuid())
+  categoryId           String
+  name                 String
+  description          String?
+  displayOrder         Int           @default(0)
+
+  category             Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userTasks            UserTask[]
+}
+
+model UserTask {
+  id                   String        @id @default(uuid())
+  userId               String
+  taskId               String
+  createdAt            DateTime      @default(now())
+
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task                 Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+}

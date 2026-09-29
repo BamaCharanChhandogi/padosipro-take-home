@@ -1,0 +1,222 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { Colors } from "../theme";
+import { InputField } from "../components/InputField";
+import { Button } from "../components/Button";
+import { apiClient } from "../api/client";
+import { useAuth } from "../context/AuthContext";
+
+interface ProfileSetupScreenProps {
+  navigation: any;
+}
+
+export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigation }) => {
+  const { user, updateUserProfile } = useAuth();
+
+  const [fullName, setFullName] = useState("");
+  const [addressArea, setAddressArea] = useState("");
+  const [society, setSociety] = useState("");
+  const [flatUnit, setFlatUnit] = useState("");
+  const [entryNotes, setEntryNotes] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Dynamic inline validation helper matching screenshot
+  const getValidationHint = () => {
+    if (!fullName.trim()) return "Enter your full name to continue.";
+    if (!addressArea.trim()) return "Enter your address & area to continue.";
+    return null;
+  };
+
+  const validationHint = getValidationHint();
+  const canContinue = !validationHint;
+
+  const handleSaveProfile = async () => {
+    if (!canContinue) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const phoneToUse = user?.mobile || "+919876543210";
+
+      const res = await apiClient.post("/profile", {
+        fullName: fullName.trim(),
+        phone: phoneToUse,
+        addressArea: addressArea.trim(),
+        society: society.trim() || undefined,
+        flatUnit: flatUnit.trim() || undefined,
+        entryNotes: entryNotes.trim() || undefined,
+        businessName: businessName.trim() || undefined,
+        city: "Mumbai",
+      });
+
+      if (res.data?.success) {
+        updateUserProfile(res.data.data);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "TaskSelection" }],
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to save profile details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            {/* City Tag matching screenshot */}
+            <Text style={styles.cityTag}>Mumbai</Text>
+
+            <Text style={styles.title}>A few details</Text>
+            <Text style={styles.subtitle}>
+              So your Lifestyle Manager can coordinate visits and deliveries smoothly.
+            </Text>
+
+            {error && <Text style={styles.serverError}>{error}</Text>}
+
+            <InputField
+              label="Full name"
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="As you would like us to use"
+            />
+
+            <InputField
+              label="Address & area"
+              value={addressArea}
+              onChangeText={setAddressArea}
+              placeholder="Road, area, landmark"
+            />
+
+            <InputField
+              label="Society / building (optional)"
+              value={society}
+              onChangeText={setSociety}
+              placeholder="Name as on the gate"
+            />
+
+            <InputField
+              label="Flat / unit (optional)"
+              value={flatUnit}
+              onChangeText={setFlatUnit}
+              placeholder="e.g. Tower B, 1204"
+            />
+
+            <InputField
+              label="Gate or entry notes (optional)"
+              value={entryNotes}
+              onChangeText={setEntryNotes}
+              placeholder="Anything the team should know at entry"
+              multiline
+              numberOfLines={3}
+              style={styles.textArea}
+            />
+
+            <InputField
+              label="Business name (optional)"
+              value={businessName}
+              onChangeText={setBusinessName}
+              placeholder="Optional: Company or firm name"
+            />
+
+            {/* Inline validation hint matching screenshot */}
+            {validationHint ? (
+              <Text style={styles.validationHint}>{validationHint}</Text>
+            ) : null}
+
+            <View style={styles.buttonWrapper}>
+              <Button
+                title={loading ? "Saving..." : "Continue"}
+                onPress={handleSaveProfile}
+                disabled={!canContinue}
+                loading={loading}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.darkBg,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 16,
+  },
+  card: {
+    backgroundColor: Colors.cardBg,
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  cityTag: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.amberTag,
+    marginBottom: 6,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  serverError: {
+    color: Colors.errorText,
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  textArea: {
+    minHeight: 64,
+    textAlignVertical: "top",
+  },
+  validationHint: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  buttonWrapper: {
+    marginTop: 4,
+  },
+});

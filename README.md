@@ -1,7 +1,11 @@
+# PadosiPro Full-Stack Assignment
+
 A high-fidelity native mobile app and backend REST API for **PadosiPro** ([app.padosipro.com](https://app.padosipro.com)), implementing the complete first-user onboarding and task selection journey.
 
 * **GitHub Repository**: [https://github.com/BamaCharanChhandogi/padosipro-take-home](https://github.com/BamaCharanChhandogi/padosipro-take-home)
-* **Live Expo Cloud Build (Android APK)**: [https://expo.dev/accounts/bamacharanchhandogis-team/projects/padosipro-app/builds/88b45292-bf2f-44bb-91bf-726d9a62ca8c](https://expo.dev/accounts/bamacharanchhandogis-team/projects/padosipro-app/builds/88b45292-bf2f-44bb-91bf-726d9a62ca8c)
+* **Direct Android APK Download**: [https://expo.dev/artifacts/eas/O__709rhwkCzb9oKbp1m7ntuPO0yUysXAjPWRTrje7U.apk](https://expo.dev/artifacts/eas/O__709rhwkCzb9oKbp1m7ntuPO0yUysXAjPWRTrje7U.apk)
+* **Expo Cloud Build Dashboard**: [https://expo.dev/accounts/bama676s-team/projects/padosipro-app/builds/6941c8ba-6005-4a1d-8f51-6c0c38e98b38](https://expo.dev/accounts/bama676s-team/projects/padosipro-app/builds/6941c8ba-6005-4a1d-8f51-6c0c38e98b38)
+* **Live Production Backend (Render)**: [https://padosipro-take-home.onrender.com/api](https://padosipro-take-home.onrender.com/api)
 
 ---
 

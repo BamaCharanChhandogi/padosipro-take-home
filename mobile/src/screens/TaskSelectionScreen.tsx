@@ -10,6 +10,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,21 +21,30 @@ import { Category } from "../types";
 
 interface TaskSelectionScreenProps {
   navigation: any;
+  route?: any;
 }
 
-export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ navigation }) => {
+export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ navigation, route }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  // Store expanded categories in an array to allow multi-expand and prevent disappearing siblings
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(["errands"]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState(route?.params?.initialSearch || "");
+  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [customRequestText, setCustomRequestText] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // Business Logic Modal: Task Details & Schedule Step
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [taskInstructions, setTaskInstructions] = useState("");
   const [preferredTiming, setPreferredTiming] = useState("Today, As soon as possible");
+
+  useEffect(() => {
+    if (route?.params?.initialSearch) {
+      setSearchQuery(route.params.initialSearch);
+    }
+  }, [route?.params?.initialSearch]);
 
   useEffect(() => {
     fetchCatalog();
@@ -145,6 +155,35 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
   const allTasks = categories.flatMap((c) => c.tasks);
   const selectedTaskObjects = allTasks.filter((t) => selectedTaskIds.includes(t.id));
 
+  // Real-time search filter
+  const query = searchQuery.trim().toLowerCase();
+  const filteredCategories = categories
+    .map((cat) => {
+      if (!query) return cat;
+      const catMatches =
+        cat.name.toLowerCase().includes(query) ||
+        cat.description.toLowerCase().includes(query);
+      const matchingTasks = cat.tasks.filter((t) =>
+        t.name.toLowerCase().includes(query)
+      );
+      if (catMatches) {
+        return cat;
+      }
+      if (matchingTasks.length > 0) {
+        return {
+          ...cat,
+          tasks: matchingTasks,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean) as Category[];
+
+  const isCategoryExpanded = (categoryId: string) => {
+    if (query.length > 0) return true; // Auto-expand when searching
+    return expandedCategoryIds.includes(categoryId);
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.centerContainer}>
@@ -176,11 +215,50 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
             Pick a category, then choose a service. You can add details next.
           </Text>
 
+          {/* Real-time Search Input */}
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color={Colors.textMuted} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search services (e.g. AC, plumbing, bills)..."
+              placeholderTextColor={Colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
           {error && <Text style={styles.errorText}>{error}</Text>}
 
+          {/* Empty search state */}
+          {filteredCategories.length === 0 && (
+            <View style={styles.emptySearchCard}>
+              <Ionicons name="search-outline" size={32} color={Colors.textMuted} />
+              <Text style={styles.emptySearchTitle}>No matching services found</Text>
+              <Text style={styles.emptySearchSub}>
+                Don't worry! Your Pilot Lifestyle Manager can fulfill custom tasks and errands.
+              </Text>
+              <TouchableOpacity
+                style={styles.customRequestBtn}
+                onPress={() => setShowCustomModal(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="add-circle-outline" size={18} color={Colors.primaryGreen} />
+                <Text style={styles.customRequestBtnText}>Add custom request</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Categories List */}
-          {categories.map((category) => {
-            const isExpanded = expandedCategoryIds.includes(category.id);
+          {filteredCategories.map((category) => {
+            const isExpanded = isCategoryExpanded(category.id);
             const categoryTaskIds = category.tasks.map((t) => t.id);
             const selectedCountInCategory = selectedTaskIds.filter((id) =>
               categoryTaskIds.includes(id)
@@ -275,6 +353,26 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
               </View>
             );
           })}
+
+          {/* Custom Errand Card */}
+          <TouchableOpacity
+            style={styles.customHelpCard}
+            onPress={() => setShowCustomModal(true)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.customHelpLeft}>
+              <View style={styles.customIconBox}>
+                <Ionicons name="sparkles-outline" size={20} color={Colors.primaryGreen} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.customHelpTitle}>Need something else?</Text>
+                <Text style={styles.customHelpSub}>
+                  Tell your Pilot LM directly — anything from pet sitting to key pickups.
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
         </ScrollView>
 
         {/* Sticky Bottom Bar */}
@@ -367,6 +465,54 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Custom Request Modal */}
+      <Modal visible={showCustomModal} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>Custom Errand Request</Text>
+                <Text style={styles.modalSubtitle}>
+                  Describe what you need. Pilot LM will coordinate it immediately.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowCustomModal(false)}>
+                <Ionicons name="close-circle-outline" size={26} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={styles.customTextInput}
+              placeholder="e.g. Need help collecting dry cleaning, picking up spare keys, or arranging a technician..."
+              placeholderTextColor={Colors.textMuted}
+              value={customRequestText}
+              onChangeText={setCustomRequestText}
+              multiline
+              numberOfLines={4}
+            />
+
+            <View style={styles.modalFooterActions}>
+              <Button
+                title="Send via WhatsApp to Pilot LM"
+                onPress={() => {
+                  const whatsappNumber = "919876543210";
+                  const reqText = customRequestText.trim() || "Special custom request";
+                  const msg = encodeURIComponent(
+                    `Hi Pilot LM! I have a custom request: ${reqText}`
+                  );
+                  setShowCustomModal(false);
+                  setCustomRequestText("");
+                  Linking.openURL(`https://wa.me/${whatsappNumber}?text=${msg}`);
+                }}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -403,7 +549,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
@@ -418,7 +564,118 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textSecondary,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderWidth: 1.5,
+    borderColor: Colors.cardBorder,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
+    marginBottom: 18,
+    gap: 10,
+  },
+  searchIcon: {
+    marginRight: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    height: "100%",
+  },
+  emptySearchCard: {
+    backgroundColor: Colors.white,
+    borderWidth: 1.5,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    marginTop: 8,
+  },
+  emptySearchTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  emptySearchSub: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  customRequestBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.mintSelectedBg,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  customRequestBtnText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+  },
+  customHelpCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.white,
+    borderWidth: 1.5,
+    borderColor: "#D1E7DD",
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 6,
+    marginBottom: 20,
+  },
+  customHelpLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+    marginRight: 10,
+  },
+  customIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: Colors.mintSelectedBg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  customHelpTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  customHelpSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+  },
+  customTextInput: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    minHeight: 100,
+    textAlignVertical: "top",
+    marginTop: 12,
+    marginBottom: 16,
   },
   errorText: {
     color: Colors.errorText,

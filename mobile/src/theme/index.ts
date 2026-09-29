@@ -9,17 +9,17 @@ export const Colors = {
   cardBg: "#FAFAF8",
   cardBorder: "#E2E8F0",
   
-  // Brand Greens
-  primaryGreen: "#175440",       // Active action buttons
+  // Brand Greens (Verified from DevTools inspection: rgb(21, 92, 73) / #155C49)
+  primaryGreen: "#155C49",       // Active action buttons
   primaryGreenDark: "#0F3A2C",   // Header & logo background
   buttonDisabled: "#8BAA9E",     // Inactive / verifying button
   mintSelectedBg: "#EBF7F0",     // Expanded category card background
-  mintBorder: "#175440",
+  mintBorder: "#155C49",
 
-  // Accents & State
+  // Accents & State (Verified from WhatFont: #101828)
   amberAccent: "#D97706",        // Focus border highlight, city tag
   amberTag: "#B45309",
-  textPrimary: "#0F172A",        // Main titles, bold headers
+  textPrimary: "#101828",        // Main titles, bold headers
   textSecondary: "#475569",      // Body copy, subtitles
   textMuted: "#94A3B8",          // Placeholders, disabled text
   errorText: "#DC2626",          // Error alert text

@@ -30,11 +30,9 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Dynamic inline validation helper matching screenshot
+  // Dynamic inline validation helper matching screenshot media_1790651455936.png
   const getValidationHint = () => {
     if (!fullName.trim()) return "Enter your full name to continue.";
-    if (!addressArea.trim()) return "Enter your address & area to continue.";
-    if (addressArea.trim().length < 3) return "Address & area must be at least 3 characters.";
     return null;
   };
 
@@ -53,7 +51,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
       const res = await apiClient.post("/profile", {
         fullName: fullName.trim(),
         phone: phoneToUse,
-        addressArea: addressArea.trim(),
+        addressArea: addressArea.trim() || "Mumbai",
         society: society.trim() || undefined,
         flatUnit: flatUnit.trim() || undefined,
         entryNotes: entryNotes.trim() || undefined,

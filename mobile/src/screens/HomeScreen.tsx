@@ -54,12 +54,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     fetchMyTasks();
   };
 
-  // WhatsApp Lifestyle Manager redirect
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  // WhatsApp Lifestyle Manager redirect with personalized task context
   const handleOpenWhatsAppChat = () => {
-    // Configured with PadosiPro pilot lifestyle manager number
     const whatsappNumber = "919876543210";
+    const tasksList =
+      selectedTasks.length > 0
+        ? selectedTasks.map((t) => t.name).join(", ")
+        : "household errands";
     const greetingMsg = encodeURIComponent(
-      `Hi Pilot LM! I am ${userName} from PadosiPro. I'd like to get an update on my requests.`
+      `Hi Pilot LM! I'm ${userName} from PadosiPro. I just submitted: ${tasksList}. Looking forward to coordinating with you!`
     );
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${greetingMsg}`;
 
@@ -68,7 +78,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         if (supported) {
           Linking.openURL(whatsappUrl);
         } else {
-          Alert.alert("WhatsApp Chat", `Opening chat for Lifestyle Manager: +${whatsappNumber}`);
+          Alert.alert("WhatsApp Chat", `Pilot LM Hotline: +${whatsappNumber}`);
           Linking.openURL(`tel:+${whatsappNumber}`);
         }
       })
@@ -95,12 +105,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryGreen} />
         }
       >
-        {/* Header - Fixed overlapping with flexible multi-line greeting and avatar spacing */}
+        {/* Header - Matching media_1790688931153.png (Good evening, [name]) */}
         <View style={styles.headerRow}>
           <View style={styles.greetingContainer}>
-            <Text style={styles.greetingSub}>Welcome back,</Text>
-            <Text style={styles.greetingName} numberOfLines={2}>
-              {userName}
+            <Text style={styles.greetingHeader}>
+              {getGreeting()}, {userName}
             </Text>
           </View>
           <TouchableOpacity
@@ -108,7 +117,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             onPress={() => navigation.navigate("Account")}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-outline" size={22} color={Colors.textPrimary} />
+            <Ionicons name="person-outline" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -122,7 +131,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             placeholderTextColor={Colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={() => {
+              if (searchQuery.trim()) {
+                navigation.navigate("TaskSelection", { initialSearch: searchQuery.trim() });
+              }
+            }}
+            returnKeyType="search"
           />
+          {searchQuery.trim().length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate("TaskSelection", { initialSearch: searchQuery.trim() });
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="arrow-forward-circle" size={22} color={Colors.primaryGreen} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Popular Categories Chips */}
@@ -132,7 +157,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <TouchableOpacity
               key={idx}
               style={styles.categoryChip}
-              onPress={() => navigation.navigate("TaskSelection")}
+              onPress={() => navigation.navigate("TaskSelection", { initialSearch: chip.title })}
               activeOpacity={0.7}
             >
               <Ionicons name={chip.icon as any} size={15} color={Colors.primaryGreen} style={{ marginRight: 6 }} />
@@ -174,6 +199,38 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </View>
               </View>
             ))}
+
+            {/* Live Progress Stepper */}
+            <View style={styles.trackerCard}>
+              <View style={styles.trackerHeader}>
+                <View style={styles.liveIndicator}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.trackerTitle}>LIVE COORDINATION</Text>
+                </View>
+                <Text style={styles.etaText}>Today, within 2 hrs</Text>
+              </View>
+              <View style={styles.stepperRow}>
+                <View style={styles.stepNode}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.primaryGreen} />
+                  <Text style={styles.stepNodeText}>Submitted</Text>
+                </View>
+                <View style={styles.stepConnectorActive} />
+                <View style={styles.stepNode}>
+                  <Ionicons name="radio-button-on" size={18} color={Colors.amberAccent} />
+                  <Text style={styles.stepNodeText}>Assigned</Text>
+                </View>
+                <View style={styles.stepConnector} />
+                <View style={styles.stepNode}>
+                  <Ionicons name="ellipse-outline" size={18} color={Colors.textMuted} />
+                  <Text style={styles.stepNodeTextMuted}>In Progress</Text>
+                </View>
+                <View style={styles.stepConnector} />
+                <View style={styles.stepNode}>
+                  <Ionicons name="ellipse-outline" size={18} color={Colors.textMuted} />
+                  <Text style={styles.stepNodeTextMuted}>Done</Text>
+                </View>
+              </View>
+            </View>
           </View>
         )}
 
@@ -244,37 +301,30 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 20,
     gap: 16,
   },
   greetingContainer: {
     flex: 1,
   },
-  greetingSub: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: "500",
-  },
-  greetingName: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: Colors.textPrimary,
-    lineHeight: 32,
-    marginTop: 2,
-    letterSpacing: -0.5,
+  greetingHeader: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#101828", // Verified from WhatFont media_1790688931153.png
+    lineHeight: 29,
+    letterSpacing: -0.3,
   },
   avatarButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: "#F1F5F9",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.white,
     borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 22,
@@ -387,6 +437,74 @@ const styles = StyleSheet.create({
     color: Colors.primaryGreen,
     fontSize: 11,
     fontWeight: "700",
+  },
+  trackerCard: {
+    backgroundColor: "#F8FAF9",
+    borderWidth: 1,
+    borderColor: "#D1E7DD",
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 8,
+  },
+  trackerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  liveIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.primaryGreen,
+  },
+  trackerTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+    letterSpacing: 0.6,
+  },
+  etaText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+  },
+  stepperRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  stepNode: {
+    alignItems: "center",
+    gap: 4,
+  },
+  stepNodeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  stepNodeTextMuted: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  stepConnector: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.cardBorder,
+    marginBottom: 14,
+    marginHorizontal: 4,
+  },
+  stepConnectorActive: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.primaryGreen,
+    marginBottom: 14,
+    marginHorizontal: 4,
   },
   stepsList: {
     gap: 16,

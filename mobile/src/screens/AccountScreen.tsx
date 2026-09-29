@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -46,12 +47,11 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   };
 
   const profile = user?.profile;
-  const phoneNumber = profile?.phone || user?.mobile || "+91 6295474539";
+  const phoneNumber = profile?.phone || user?.mobile || "+91 7719222741";
   const userCity = profile?.city || "Mumbai";
   const userName = profile?.fullName || "Bama Charan";
-  const addressDetails = profile?.addressArea ? `${profile.addressArea}` : "Address not set";
+  const societyDetails = profile?.society || profile?.addressArea || "system";
   const flatDetails = profile?.flatUnit ? `Flat / unit: ${profile.flatUnit}` : null;
-  const societyDetails = profile?.society ? `Society: ${profile.society}` : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -72,42 +72,57 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
         <View style={styles.infoCard}>
           <Text style={styles.cardLabel}>Signed in as</Text>
           <Text style={styles.cardValue}>{phoneNumber}</Text>
-          <Text style={styles.cardSubText}>{user?.email}</Text>
+          {user?.email ? <Text style={styles.cardSubText}>{user.email}</Text> : null}
         </View>
 
-        {/* Your Profile & Address Card (Editable) */}
+        {/* Your LM Card */}
         <View style={styles.infoCard}>
           <View style={styles.cardHeaderRow}>
-            <Text style={styles.cardLabel}>YOUR PROFILE & ADDRESS</Text>
+            <Text style={styles.cardLabel}>Your LM</Text>
             <TouchableOpacity
               style={styles.editBtn}
               onPress={() => navigation.navigate("ProfileSetup")}
               activeOpacity={0.7}
             >
-              <Ionicons name="create-outline" size={16} color={Colors.primaryGreen} />
+              <Ionicons name="create-outline" size={14} color={Colors.primaryGreen} />
               <Text style={styles.editBtnText}>Edit</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.cardValue}>{userName}</Text>
-          <Text style={styles.cardSubText}>{userCity} • {addressDetails}</Text>
-          {societyDetails && <Text style={styles.cardSubText}>{societyDetails}</Text>}
-          {flatDetails && <Text style={styles.cardSubText}>{flatDetails}</Text>}
-        </View>
-
-        {/* Your LM Card */}
-        <View style={styles.infoCard}>
-          <Text style={styles.cardLabel}>YOUR DEDICATED LIFESTYLE MANAGER</Text>
           <Text style={styles.cardValue}>Pilot LM</Text>
-          <Text style={styles.cardSubText}>Dedicated coordinator for Mumbai households</Text>
+          <Text style={styles.cardSubText}>{userCity}</Text>
+          {societyDetails ? <Text style={styles.cardSubText}>{societyDetails}</Text> : null}
+          {flatDetails ? <Text style={styles.cardSubText}>{flatDetails}</Text> : null}
         </View>
 
         {/* Household Card */}
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.actionCard}
+          activeOpacity={0.7}
+          onPress={() => {
+            Alert.alert(
+              "Household Members",
+              "Manage household family members who can request and coordinate tasks with your Lifestyle Manager.",
+              [
+                { text: "Close", style: "cancel" },
+                {
+                  text: "Message LM on WhatsApp",
+                  onPress: () => {
+                    const whatsappNumber = "919876543210";
+                    const msg = encodeURIComponent(
+                      `Hi Pilot LM! I would like to coordinate household members for ${userName} (${phoneNumber}).`
+                    );
+                    Linking.openURL(`https://wa.me/${whatsappNumber}?text=${msg}`);
+                  },
+                },
+              ]
+            );
+          }}
+        >
           <View style={styles.actionCardLeft}>
             <View style={styles.iconCircle}>
               <Ionicons name="people-outline" size={20} color={Colors.primaryGreen} />
             </View>
-            <View>
+            <View style={styles.actionTextContainer}>
               <Text style={styles.actionTitle}>Household</Text>
               <Text style={styles.actionSub}>Family members your LM should know about</Text>
             </View>
@@ -117,7 +132,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
 
         {/* Wallet Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.cardLabel}>WALLET</Text>
+          <Text style={styles.cardLabel}>Wallet</Text>
           <Text style={styles.cardValue}>Coming soon</Text>
           <Text style={styles.walletDesc}>
             Wallet top-up isn't turned on yet. Your Lifestyle Manager can still handle requests
@@ -130,6 +145,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
           <Button
             title="Sign out"
             variant="dangerOutline"
+            leftIcon={<Ionicons name="log-out-outline" size={18} color={Colors.dangerRed} />}
             onPress={handleLogout}
             loading={loggingOut}
           />
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
@@ -222,32 +238,39 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
-    padding: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
     marginBottom: 16,
   },
   actionCardLeft: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
-    gap: 12,
+    marginRight: 12,
   },
   iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#F1F5F9",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.mintSelectedBg,
     alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  actionTextContainer: {
+    flex: 1,
     justifyContent: "center",
   },
   actionTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   actionSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
+    lineHeight: 18,
   },
   walletDesc: {
     fontSize: 13,

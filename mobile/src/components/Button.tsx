@@ -2,6 +2,7 @@ import React from "react";
 import {
   TouchableOpacity,
   Text,
+  View,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
@@ -15,6 +16,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   variant?: "primary" | "secondary" | "dangerOutline";
+  leftIcon?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -25,6 +27,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   variant = "primary",
+  leftIcon,
   style,
   textStyle,
 }) => {
@@ -53,9 +56,15 @@ export const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.85}
     >
       {loading ? (
-        <ActivityIndicator color={Colors.white} size="small" />
+        <ActivityIndicator
+          color={variant === "dangerOutline" ? Colors.dangerRed : Colors.white}
+          size="small"
+        />
       ) : (
-        <Text style={[styles.baseText, textStyleFinal, textStyle]}>{title}</Text>
+        <View style={styles.contentRow}>
+          {leftIcon}
+          <Text style={[styles.baseText, textStyleFinal, textStyle]}>{title}</Text>
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -63,7 +72,7 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    height: 48,
+    height: 56,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -71,7 +80,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   baseText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
   },
   primary: {
@@ -95,5 +104,11 @@ const styles = StyleSheet.create({
   },
   dangerOutlineText: {
     color: Colors.dangerRed,
+  },
+  contentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
 });

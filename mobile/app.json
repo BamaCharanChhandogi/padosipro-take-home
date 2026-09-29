@@ -14,11 +14,15 @@
       "bundleIdentifier": "com.padosipro.lifestyle"
     },
     "android": {
-      "package": "com.padosipro.lifestyle",
+      "package": "com.bamacharan.padosipro",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#175440"
-      }
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#155C49"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "extra": {
       "eas": {

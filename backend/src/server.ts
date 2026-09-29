@@ -9,6 +9,16 @@ export const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoints for external uptime monitors & crons
+app.get(["/", "/health"], (req, res) => {
+  res.json({
+    status: "ok",
+    service: "PadosiPro API",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // API Routes
 app.use("/api", apiRouter);
 

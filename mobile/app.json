@@ -24,14 +24,14 @@
         "ACCESS_NETWORK_STATE"
       ]
     },
-    "extra": {
-      "eas": {
-        "projectId": "94861e70-8163-4ef2-b94d-14bafbe1bbb6"
-      }
-    },
-    "owner": "bamacharanchhandogis-team",
+    "owner": "bama676s-team",
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "87b42b53-f6b9-4fd5-86a5-0487fb3b8687"
+      }
+    }
   }
 }

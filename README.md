@@ -1,6 +1,7 @@
-# PadosiPro Full-Stack Developer Take-Home Assignment
-
 A high-fidelity native mobile app and backend REST API for **PadosiPro** ([app.padosipro.com](https://app.padosipro.com)), implementing the complete first-user onboarding and task selection journey.
+
+* **GitHub Repository**: [https://github.com/BamaCharanChhandogi/padosipro-take-home](https://github.com/BamaCharanChhandogi/padosipro-take-home)
+* **Live Expo Cloud Build (Android APK)**: [https://expo.dev/accounts/bamacharanchhandogis-team/projects/padosipro-app/builds/bc01dc8d-fcf4-42e1-be7a-9494388b74f3](https://expo.dev/accounts/bamacharanchhandogis-team/projects/padosipro-app/builds/bc01dc8d-fcf4-42e1-be7a-9494388b74f3)
 
 ---
 

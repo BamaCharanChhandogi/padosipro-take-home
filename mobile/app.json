@@ -22,8 +22,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "7b9fd16a-7d1c-4728-85ac-5bfa75bb9b4f"
       }
-    }
+    },
+    "owner": "bamacharanchhandogi"
   }
 }

@@ -34,6 +34,35 @@ apiRouter.post("/auth/test-email", async (req, res) => {
   }
 });
 
+// Administrative account reset endpoint
+apiRouter.post("/auth/reset-account", async (req, res) => {
+  const { emails, secret } = req.body;
+  if (secret !== "padosipro_admin_reset_2026") {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+  try {
+    const { prisma } = await import("../config");
+    const targetEmails = Array.isArray(emails) ? emails : [emails];
+    const normalized = targetEmails.map((e: string) => e.toLowerCase().trim());
+
+    const userRes = await prisma.user.deleteMany({
+      where: { email: { in: normalized } },
+    });
+    const otpRes = await prisma.otp.deleteMany({
+      where: { email: { in: normalized } },
+    });
+
+    res.json({
+      success: true,
+      deletedUsersCount: userRes.count,
+      deletedOtpsCount: otpRes.count,
+      emails: normalized,
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Profile routes
 apiRouter.get("/profile", requireAuth, ProfileController.getProfile);
 apiRouter.post("/profile", requireAuth, ProfileController.saveProfile);

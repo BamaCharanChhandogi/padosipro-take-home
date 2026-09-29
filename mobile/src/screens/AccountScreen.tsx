@@ -48,8 +48,10 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   const profile = user?.profile;
   const phoneNumber = profile?.phone || user?.mobile || "+91 6295474539";
   const userCity = profile?.city || "Mumbai";
-  const userName = profile?.fullName || "Bama";
-  const flatDetails = profile?.flatUnit ? `Flat / unit: ${profile.flatUnit}` : "Residence";
+  const userName = profile?.fullName || "Bama Charan";
+  const addressDetails = profile?.addressArea ? `${profile.addressArea}` : "Address not set";
+  const flatDetails = profile?.flatUnit ? `Flat / unit: ${profile.flatUnit}` : null;
+  const societyDetails = profile?.society ? `Society: ${profile.society}` : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -70,15 +72,33 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
         <View style={styles.infoCard}>
           <Text style={styles.cardLabel}>Signed in as</Text>
           <Text style={styles.cardValue}>{phoneNumber}</Text>
+          <Text style={styles.cardSubText}>{user?.email}</Text>
+        </View>
+
+        {/* Your Profile & Address Card (Editable) */}
+        <View style={styles.infoCard}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardLabel}>YOUR PROFILE & ADDRESS</Text>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate("ProfileSetup")}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="create-outline" size={16} color={Colors.primaryGreen} />
+              <Text style={styles.editBtnText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.cardValue}>{userName}</Text>
+          <Text style={styles.cardSubText}>{userCity} • {addressDetails}</Text>
+          {societyDetails && <Text style={styles.cardSubText}>{societyDetails}</Text>}
+          {flatDetails && <Text style={styles.cardSubText}>{flatDetails}</Text>}
         </View>
 
         {/* Your LM Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.cardLabel}>Your LM</Text>
+          <Text style={styles.cardLabel}>YOUR DEDICATED LIFESTYLE MANAGER</Text>
           <Text style={styles.cardValue}>Pilot LM</Text>
-          <Text style={styles.cardSubText}>{userCity}</Text>
-          <Text style={styles.cardSubText}>{userName}</Text>
-          <Text style={styles.cardSubText}>{flatDetails}</Text>
+          <Text style={styles.cardSubText}>Dedicated coordinator for Mumbai households</Text>
         </View>
 
         {/* Household Card */}
@@ -97,7 +117,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
 
         {/* Wallet Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.cardLabel}>Wallet</Text>
+          <Text style={styles.cardLabel}>WALLET</Text>
           <Text style={styles.cardValue}>Coming soon</Text>
           <Text style={styles.walletDesc}>
             Wallet top-up isn't turned on yet. Your Lifestyle Manager can still handle requests
@@ -105,7 +125,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Sign Out Button matching media_1790651548688.png */}
+        {/* Sign Out Button */}
         <View style={styles.buttonWrapper}>
           <Button
             title="Sign out"
@@ -150,17 +170,37 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
     padding: 18,
     marginBottom: 16,
   },
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  editBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.mintSelectedBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  editBtnText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+  },
   cardLabel: {
     fontSize: 11,
     fontWeight: "700",
     color: Colors.textSecondary,
-    marginBottom: 6,
+    letterSpacing: 0.6,
   },
   cardValue: {
     fontSize: 17,
@@ -172,13 +212,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 2,
+    lineHeight: 20,
   },
   actionCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
     padding: 18,
@@ -191,9 +232,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",

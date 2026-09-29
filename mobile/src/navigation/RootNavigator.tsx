@@ -49,6 +49,7 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="TaskSelection" component={TaskSelectionScreen} />
             <Stack.Screen name="Account" component={AccountScreen} />
+            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
           </>
         )}
       </Stack.Navigator>

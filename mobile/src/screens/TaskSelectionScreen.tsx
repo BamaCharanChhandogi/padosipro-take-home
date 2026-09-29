@@ -6,6 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,9 +26,15 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>("errands");
+  // Store expanded categories in an array to allow multi-expand and prevent disappearing siblings
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(["errands"]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Business Logic Modal: Task Details & Schedule Step
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [taskInstructions, setTaskInstructions] = useState("");
+  const [preferredTiming, setPreferredTiming] = useState("Today, As soon as possible");
 
   useEffect(() => {
     fetchCatalog();
@@ -34,9 +44,31 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
     try {
       setLoading(true);
       setError(null);
-      const res = await apiClient.get("/tasks/catalog");
-      if (res.data?.success) {
-        setCategories(res.data.data);
+      const [catRes, myTasksRes] = await Promise.allSettled([
+        apiClient.get("/tasks/catalog"),
+        apiClient.get("/tasks/my-tasks"),
+      ]);
+
+      if (catRes.status === "fulfilled" && catRes.value.data?.success) {
+        const fetchedCats: Category[] = catRes.value.data.data;
+        setCategories(fetchedCats);
+
+        // Preload any existing selected tasks if user previously saved
+        if (myTasksRes.status === "fulfilled" && myTasksRes.value.data?.success) {
+          const existingTasks = myTasksRes.value.data.data;
+          if (existingTasks && existingTasks.length > 0) {
+            const existingIds = existingTasks.map((t: any) => t.id);
+            setSelectedTaskIds(existingIds);
+
+            // Expand categories that contain selected tasks
+            const activeCatIds = fetchedCats
+              .filter((c) => c.tasks.some((t) => existingIds.includes(t.id)))
+              .map((c) => c.id);
+            if (activeCatIds.length > 0) {
+              setExpandedCategoryIds(activeCatIds);
+            }
+          }
+        }
       }
     } catch (err: any) {
       setError(err.message || "Failed to load services catalogue.");
@@ -46,7 +78,11 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
   };
 
   const toggleCategory = (categoryId: string) => {
-    setExpandedCategoryId((prev) => (prev === categoryId ? null : categoryId));
+    setExpandedCategoryIds((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const toggleTask = (taskId: string) => {
@@ -55,19 +91,32 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
     );
   };
 
-  const handleSaveTasks = async () => {
-    if (selectedTaskIds.length === 0) return;
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate("Home");
+    }
+  };
 
+  const handleOpenConfirm = () => {
+    if (selectedTaskIds.length === 0) return;
+    setShowConfirmModal(true);
+  };
+
+  const handleFinalSubmit = async () => {
     try {
       setSubmitting(true);
       setError(null);
       await apiClient.post("/tasks/select", { taskIds: selectedTaskIds });
+      setShowConfirmModal(false);
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
       });
     } catch (err: any) {
       setError(err.message || "Failed to save selected tasks.");
+      setShowConfirmModal(false);
     } finally {
       setSubmitting(false);
     }
@@ -76,21 +125,25 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case "check-square":
-        return <Ionicons name="checkbox-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="checkbox-outline" size={22} color={Colors.primaryGreen} />;
       case "home":
-        return <Ionicons name="home-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="home-outline" size={22} color={Colors.primaryGreen} />;
       case "map-pin":
-        return <Ionicons name="location-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="location-outline" size={22} color={Colors.primaryGreen} />;
       case "heart":
-        return <Ionicons name="heart-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="heart-outline" size={22} color={Colors.primaryGreen} />;
       case "users":
-        return <Ionicons name="people-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="people-outline" size={22} color={Colors.primaryGreen} />;
       case "calendar":
-        return <Ionicons name="calendar-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="calendar-outline" size={22} color={Colors.primaryGreen} />;
       default:
-        return <Ionicons name="list-outline" size={20} color={Colors.primaryGreen} />;
+        return <Ionicons name="list-outline" size={22} color={Colors.primaryGreen} />;
     }
   };
+
+  // Find names of selected tasks for the confirmation summary
+  const allTasks = categories.flatMap((c) => c.tasks);
+  const selectedTaskObjects = allTasks.filter((t) => selectedTaskIds.includes(t.id));
 
   if (loading) {
     return (
@@ -107,10 +160,11 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={false}
         >
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={handleBack}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-back" size={20} color={Colors.primaryGreen} />
@@ -126,7 +180,11 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
 
           {/* Categories List */}
           {categories.map((category) => {
-            const isExpanded = expandedCategoryId === category.id;
+            const isExpanded = expandedCategoryIds.includes(category.id);
+            const categoryTaskIds = category.tasks.map((t) => t.id);
+            const selectedCountInCategory = selectedTaskIds.filter((id) =>
+              categoryTaskIds.includes(id)
+            ).length;
 
             return (
               <View
@@ -136,19 +194,46 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
                   isExpanded && styles.categoryCardExpanded,
                 ]}
               >
+                {/* Visual left accent bar when active */}
+                {isExpanded && <View style={styles.accentBar} pointerEvents="none" />}
+
                 <TouchableOpacity
                   style={styles.categoryHeader}
                   onPress={() => toggleCategory(category.id)}
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                 >
-                  <View style={styles.iconBox}>{getCategoryIcon(category.icon)}</View>
+                  <View style={[styles.iconBox, isExpanded && styles.iconBoxExpanded]}>
+                    {getCategoryIcon(category.icon)}
+                  </View>
                   <View style={styles.categoryHeaderText}>
-                    <Text style={styles.categoryTitle}>{category.name}</Text>
+                    <View style={styles.titleRow}>
+                      <Text
+                        style={[
+                          styles.categoryTitle,
+                          isExpanded && styles.categoryTitleExpanded,
+                        ]}
+                      >
+                        {category.name}
+                      </Text>
+                      {selectedCountInCategory > 0 && (
+                        <View style={styles.countBadge}>
+                          <Text style={styles.countBadgeText}>
+                            {selectedCountInCategory} selected
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.categoryDesc}>{category.description}</Text>
                   </View>
+                  <Ionicons
+                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color={isExpanded ? Colors.primaryGreen : Colors.textMuted}
+                    style={{ marginLeft: 8 }}
+                  />
                 </TouchableOpacity>
 
-                {/* Expanded Sub-tasks ("WHAT KIND OF HELP?") matching screenshots */}
+                {/* Sub-tasks section */}
                 {isExpanded && (
                   <View style={styles.subTasksContainer}>
                     <Text style={styles.subTasksHeader}>WHAT KIND OF HELP?</Text>
@@ -178,7 +263,7 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
                                 name="checkmark"
                                 size={14}
                                 color={Colors.white}
-                                style={{ marginLeft: 4 }}
+                                style={{ marginLeft: 6 }}
                               />
                             )}
                           </TouchableOpacity>
@@ -192,22 +277,96 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
           })}
         </ScrollView>
 
-        {/* Sticky Bottom Bar matching screenshot */}
+        {/* Sticky Bottom Bar */}
         <View style={styles.stickyFooter}>
           <Button
             title={
               submitting
                 ? "Saving..."
                 : selectedTaskIds.length > 0
-                ? `Continue (${selectedTaskIds.length} selected)`
-                : "Continue"
+                ? `Continue (${selectedTaskIds.length} service${selectedTaskIds.length > 1 ? "s" : ""} selected)`
+                : "Select at least 1 service to continue"
             }
-            onPress={handleSaveTasks}
+            onPress={handleOpenConfirm}
             disabled={selectedTaskIds.length === 0}
             loading={submitting}
           />
         </View>
       </View>
+
+      {/* Business Flow Modal: Task Details & Schedule */}
+      <Modal visible={showConfirmModal} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Confirm Your Requests</Text>
+                <Text style={styles.modalSubtitle}>
+                  Your Lifestyle Manager (Pilot LM) will coordinate these tasks.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowConfirmModal(false)}>
+                <Ionicons name="close-circle-outline" size={26} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.selectedTasksHeader}>SELECTED SERVICES ({selectedTaskObjects.length}):</Text>
+              {selectedTaskObjects.map((t) => (
+                <View key={t.id} style={styles.confirmTaskRow}>
+                  <Ionicons name="checkmark-circle" size={18} color={Colors.primaryGreen} />
+                  <Text style={styles.confirmTaskText}>{t.name}</Text>
+                </View>
+              ))}
+
+              <Text style={[styles.selectedTasksHeader, { marginTop: 16 }]}>WHEN SHOULD WE START?</Text>
+              <View style={styles.timingRow}>
+                {["Today, ASAP", "Tomorrow Morning", "This Weekend"].map((opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={[
+                      styles.timingChip,
+                      preferredTiming === opt && styles.timingChipSelected,
+                    ]}
+                    onPress={() => setPreferredTiming(opt)}
+                  >
+                    <Text
+                      style={[
+                        styles.timingText,
+                        preferredTiming === opt && styles.timingTextSelected,
+                      ]}
+                    >
+                      {opt}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.selectedTasksHeader, { marginTop: 16 }]}>ADD SPECIFIC NOTES (OPTIONAL):</Text>
+              <TextInput
+                style={styles.instructionsInput}
+                placeholder="e.g. Please send someone experienced with Daikin AC repair..."
+                placeholderTextColor={Colors.textMuted}
+                value={taskInstructions}
+                onChangeText={setTaskInstructions}
+                multiline
+                numberOfLines={2}
+              />
+            </ScrollView>
+
+            <View style={styles.modalFooterActions}>
+              <Button
+                title={submitting ? "Confirming..." : "Confirm & Send to Pilot LM"}
+                onPress={handleFinalSubmit}
+                loading={submitting}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -268,22 +427,32 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
     marginBottom: 14,
-    overflow: "hidden",
+    position: "relative",
+    // NOTE: Intentionally no overflow: "hidden" here to prevent Android ReactViewGroup clipping bug on siblings
   },
   categoryCardExpanded: {
-    backgroundColor: Colors.mintSelectedBg,
+    backgroundColor: "#F4FBF7",
     borderColor: Colors.primaryGreen,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.amberAccent,
+  },
+  accentBar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: Colors.amberAccent,
+    borderTopLeftRadius: 15,
+    borderBottomLeftRadius: 15,
   },
   categoryHeader: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
+    minHeight: 76,
   },
   iconBox: {
     width: 44,
@@ -294,14 +463,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
+  iconBoxExpanded: {
+    backgroundColor: "#E8F5E9",
+  },
   categoryHeaderText: {
     flex: 1,
+    justifyContent: "center",
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+    flexWrap: "wrap",
+    gap: 6,
   },
   categoryTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: 4,
+  },
+  categoryTitleExpanded: {
+    color: Colors.primaryGreen,
+  },
+  countBadge: {
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  countBadgeText: {
+    color: Colors.white,
+    fontSize: 11,
+    fontWeight: "700",
   },
   categoryDesc: {
     fontSize: 13,
@@ -311,13 +504,17 @@ const styles = StyleSheet.create({
   subTasksContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(30, 77, 43, 0.08)",
   },
   subTasksHeader: {
     fontSize: 11,
     fontWeight: "700",
-    color: Colors.textSecondary,
+    color: Colors.primaryGreen,
     letterSpacing: 0.8,
     marginBottom: 10,
+    marginTop: 8,
   },
   pillsWrap: {
     flexDirection: "row",
@@ -328,7 +525,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 20,
     paddingHorizontal: 14,
@@ -340,7 +537,7 @@ const styles = StyleSheet.create({
   },
   taskPillText: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
     color: Colors.textPrimary,
   },
   taskPillTextSelected: {
@@ -356,5 +553,89 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: Colors.cardBorder,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  selectedTasksHeader: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.textSecondary,
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  confirmTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 6,
+  },
+  confirmTaskText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  timingRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  timingChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: "#F8FAFC",
+  },
+  timingChipSelected: {
+    backgroundColor: Colors.mintSelectedBg,
+    borderColor: Colors.primaryGreen,
+  },
+  timingText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: Colors.textSecondary,
+  },
+  timingTextSelected: {
+    color: Colors.primaryGreen,
+    fontWeight: "700",
+  },
+  instructionsInput: {
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    minHeight: 56,
+    textAlignVertical: "top",
+  },
+  modalFooterActions: {
+    marginTop: 20,
   },
 });

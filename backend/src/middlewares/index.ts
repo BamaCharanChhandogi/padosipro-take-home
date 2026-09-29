@@ -48,9 +48,16 @@ export async function requireAuth(req: AuthenticatedRequest, res: Response, next
 }
 
 export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "An unexpected error occurred.";
-  const code = err.code || "INTERNAL_ERROR";
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "An unexpected error occurred.";
+  let code = err.code || "INTERNAL_ERROR";
+
+  // Gracefully handle Zod validation errors
+  if (err.name === "ZodError" && err.issues?.length > 0) {
+    statusCode = 400;
+    code = "VALIDATION_ERROR";
+    message = err.issues.map((i: any) => i.message).join(". ");
+  }
 
   if (statusCode === 500) {
     console.error("Unhandled error:", err);

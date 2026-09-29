@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
+  Linking,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,7 +28,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const userName = user?.profile?.fullName || user?.email?.split("@")[0] || "there";
+  const userName = user?.profile?.fullName || user?.email?.split("@")[0] || "Bama";
 
   const fetchMyTasks = async () => {
     try {
@@ -52,6 +54,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     fetchMyTasks();
   };
 
+  // WhatsApp Lifestyle Manager redirect
+  const handleOpenWhatsAppChat = () => {
+    // Configured with PadosiPro pilot lifestyle manager number
+    const whatsappNumber = "919876543210";
+    const greetingMsg = encodeURIComponent(
+      `Hi Pilot LM! I am ${userName} from PadosiPro. I'd like to get an update on my requests.`
+    );
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${greetingMsg}`;
+
+    Linking.canOpenURL(whatsappUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(whatsappUrl);
+        } else {
+          Alert.alert("WhatsApp Chat", `Opening chat for Lifestyle Manager: +${whatsappNumber}`);
+          Linking.openURL(`tel:+${whatsappNumber}`);
+        }
+      })
+      .catch(() => {
+        Alert.alert("Lifestyle Manager Support", `Pilot LM Hotline: +${whatsappNumber}`);
+      });
+  };
+
   const categoriesChips = [
     { title: "Errands & Daily Tasks", icon: "checkbox-outline" },
     { title: "Home Services", icon: "home-outline" },
@@ -70,15 +95,20 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primaryGreen} />
         }
       >
-        {/* Header */}
+        {/* Header - Fixed overlapping with flexible multi-line greeting and avatar spacing */}
         <View style={styles.headerRow}>
-          <Text style={styles.greetingText}>Good morning, {userName}</Text>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingSub}>Welcome back,</Text>
+            <Text style={styles.greetingName} numberOfLines={2}>
+              {userName}
+            </Text>
+          </View>
           <TouchableOpacity
             style={styles.avatarButton}
             onPress={() => navigation.navigate("Account")}
             activeOpacity={0.8}
           >
-            <Ionicons name="person-outline" size={20} color={Colors.textPrimary} />
+            <Ionicons name="person-outline" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
@@ -124,15 +154,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         {/* Selected Tasks Display */}
         {selectedTasks.length > 0 && (
           <View style={styles.tasksSection}>
-            <Text style={styles.subHeading}>YOUR CURRENT REQUESTS ({selectedTasks.length})</Text>
+            <View style={styles.tasksSectionHeader}>
+              <Text style={styles.subHeading}>YOUR CURRENT REQUESTS ({selectedTasks.length})</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("TaskSelection")}>
+                <Text style={styles.editTasksLink}>+ Add more</Text>
+              </TouchableOpacity>
+            </View>
             {selectedTasks.map((t) => (
               <View key={t.id} style={styles.selectedTaskCard}>
                 <View style={styles.taskBadge}>
-                  <Ionicons name="checkmark-circle" size={18} color={Colors.primaryGreen} />
+                  <Ionicons name="checkmark-circle" size={20} color={Colors.primaryGreen} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.selectedTaskName}>{t.name}</Text>
                   <Text style={styles.selectedTaskCat}>{t.categoryName}</Text>
+                </View>
+                <View style={styles.statusChip}>
+                  <Text style={styles.statusChipText}>Assigned</Text>
                 </View>
               </View>
             ))}
@@ -173,14 +211,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Your Lifestyle Manager Card */}
+        {/* Your Lifestyle Manager Card with WhatsApp Integration */}
         <View style={styles.lmCard}>
-          <View>
-            <Text style={styles.lmSub}>Your Lifestyle Manager</Text>
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <Text style={styles.lmSub}>Your Dedicated Lifestyle Manager</Text>
             <Text style={styles.lmName}>Pilot LM</Text>
+            <Text style={styles.lmStatus}>● Online & Coordinating</Text>
           </View>
-          <TouchableOpacity style={styles.chatButton} activeOpacity={0.7}>
-            <Ionicons name="chatbox-ellipses-outline" size={16} color={Colors.primaryGreen} />
+          <TouchableOpacity
+            style={styles.chatButton}
+            onPress={handleOpenWhatsAppChat}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="logo-whatsapp" size={18} color={Colors.white} />
             <Text style={styles.chatText}>Chat</Text>
           </TouchableOpacity>
         </View>
@@ -201,22 +244,37 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 24,
+    gap: 16,
   },
-  greetingText: {
-    fontSize: 24,
+  greetingContainer: {
+    flex: 1,
+  },
+  greetingSub: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  greetingName: {
+    fontSize: 26,
     fontWeight: "800",
     color: Colors.textPrimary,
+    lineHeight: 32,
+    marginTop: 2,
+    letterSpacing: -0.5,
   },
   avatarButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: "#F1F5F9",
+    borderWidth: 1.5,
+    borderColor: Colors.cardBorder,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 22,
@@ -228,11 +286,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 12,
     paddingHorizontal: 14,
-    height: 48,
+    height: 50,
     marginBottom: 24,
   },
   searchIcon: {
@@ -260,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 20,
     paddingHorizontal: 14,
@@ -269,7 +327,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
     color: Colors.textPrimary,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   browseLink: {
     flexDirection: "row",
@@ -279,19 +337,30 @@ const styles = StyleSheet.create({
   },
   browseLinkText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: Colors.primaryGreen,
   },
   tasksSection: {
     marginBottom: 24,
   },
+  tasksSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  editTasksLink: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+    marginBottom: 12,
+  },
   selectedTaskCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     marginBottom: 10,
   },
@@ -299,14 +368,25 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   selectedTaskName: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: Colors.textPrimary,
   },
   selectedTaskCat: {
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  statusChip: {
+    backgroundColor: Colors.mintSelectedBg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  statusChipText: {
+    color: Colors.primaryGreen,
+    fontSize: 11,
+    fontWeight: "700",
   },
   stepsList: {
     gap: 16,
@@ -317,8 +397,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   stepIconBox: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 10,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
@@ -331,7 +411,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 2,
   },
@@ -345,29 +425,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
-    borderRadius: 14,
+    borderRadius: 16,
     padding: 18,
   },
   lmSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textMuted,
+    fontWeight: "600",
     marginBottom: 2,
   },
   lmName: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 17,
+    fontWeight: "800",
     color: Colors.textPrimary,
+  },
+  lmStatus: {
+    fontSize: 11,
+    color: Colors.primaryGreen,
+    fontWeight: "600",
+    marginTop: 3,
   },
   chatButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
+    backgroundColor: "#25D366", // Authentic WhatsApp brand green
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
   },
   chatText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: Colors.primaryGreen,
+    fontWeight: "700",
+    color: Colors.white,
   },
 });

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInputProps,
   ViewStyle,
+  Platform,
 } from "react-native";
 import { Colors } from "../theme";
 
@@ -36,7 +37,7 @@ export const InputField: React.FC<InputFieldProps> = ({
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputFocused,
+          isFocused ? styles.inputFocused : null,
           error ? styles.inputError : null,
         ]}
       >
@@ -45,6 +46,8 @@ export const InputField: React.FC<InputFieldProps> = ({
         <TextInput
           style={[styles.input, style]}
           placeholderTextColor={Colors.textMuted}
+          selectionColor={Colors.amberAccent}
+          cursorColor={Colors.amberAccent}
           onFocus={(e) => {
             setIsFocused(true);
             onFocus && onFocus(e);
@@ -68,7 +71,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
     color: Colors.textSecondary,
     marginBottom: 6,
   },
@@ -76,19 +79,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: Colors.cardBorder,
     borderRadius: 8,
     paddingHorizontal: 12,
-    minHeight: 46,
+    minHeight: 48,
   },
   inputFocused: {
     borderColor: Colors.amberAccent,
-    shadowColor: Colors.amberAccent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
   },
   inputError: {
     borderColor: Colors.errorText,
@@ -106,9 +104,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textPrimary,
-    paddingVertical: 10,
+    paddingVertical: Platform.OS === "android" ? 8 : 12,
+    height: "100%",
   },
   errorText: {
     fontSize: 12,

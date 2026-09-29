@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInput,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { BrandHeader } from "../components/BrandHeader";
-import { InputField } from "../components/InputField";
 import { Button } from "../components/Button";
 import { apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
@@ -26,7 +28,7 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   navigation,
   route,
 }) => {
-  const { email, mobile } = route.params || {};
+  const { email } = route.params || {};
   const { loginWithToken } = useAuth();
 
   const [otpCode, setOtpCode] = useState("");
@@ -34,8 +36,19 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
-  // 30-second cooldown timer matching brief requirement
+  const inputRef = useRef<TextInput>(null);
+
+  // Auto focus input when screen loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 30-second cooldown timer
   useEffect(() => {
     let timer: any;
     if (countdown > 0) {
@@ -57,6 +70,7 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
 
     try {
       setLoading(true);
+      Keyboard.dismiss();
       const res = await apiClient.post("/auth/verify-otp", {
         email,
         code: otpCode.trim(),
@@ -66,7 +80,6 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
         const { token, user } = res.data.data;
         await loginWithToken(token, user);
 
-        // First-login profile check
         if (!user.hasCompletedProfile) {
           navigation.reset({
             index: 0,
@@ -102,13 +115,13 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
         >
           {/* Top Navigation */}
           <TouchableOpacity
@@ -134,18 +147,35 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
             </View>
           )}
 
-          <InputField
-            label="6-digit code"
-            value={otpCode}
-            onChangeText={(text) => {
-              setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6));
-              if (error) setError(null);
-            }}
-            placeholder="- - - - - -"
-            keyboardType="number-pad"
-            maxLength={6}
-            style={styles.otpInput}
-          />
+          <Text style={styles.fieldLabel}>6-digit code</Text>
+
+          {/* Guaranteed Focus Tap Area */}
+          <TouchableWithoutFeedback onPress={() => inputRef.current?.focus()}>
+            <View style={[styles.otpContainer, isFocused ? styles.otpContainerFocused : null]}>
+              <TextInput
+                ref={inputRef}
+                value={otpCode}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/[^0-9]/g, "").slice(0, 6);
+                  setOtpCode(cleaned);
+                  if (error) setError(null);
+                  if (cleaned.length === 6) {
+                    Keyboard.dismiss();
+                  }
+                }}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder="- - - - - -"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="number-pad"
+                maxLength={6}
+                style={styles.otpInput}
+                autoFocus={true}
+                cursorColor={Colors.amberAccent}
+                selectionColor={Colors.amberAccent}
+              />
+            </View>
+          </TouchableWithoutFeedback>
 
           <TouchableOpacity
             onPress={handleResend}
@@ -235,15 +265,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     flex: 1,
   },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  otpContainer: {
+    backgroundColor: Colors.white,
+    borderWidth: 1.5,
+    borderColor: Colors.cardBorder,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    height: 52,
+    justifyContent: "center",
+  },
+  otpContainerFocused: {
+    borderColor: Colors.amberAccent,
+  },
   otpInput: {
     fontSize: 24,
     letterSpacing: 10,
     textAlign: "left",
     fontWeight: "700",
+    color: Colors.textPrimary,
+    height: "100%",
   },
   resendWrapper: {
     alignSelf: "flex-start",
-    marginTop: 4,
+    marginTop: 12,
     marginBottom: 24,
   },
   resendText: {

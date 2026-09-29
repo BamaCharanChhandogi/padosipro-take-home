@@ -21,12 +21,12 @@ interface ProfileSetupScreenProps {
 export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigation }) => {
   const { user, updateUserProfile } = useAuth();
 
-  const [fullName, setFullName] = useState("");
-  const [addressArea, setAddressArea] = useState("");
-  const [society, setSociety] = useState("");
-  const [flatUnit, setFlatUnit] = useState("");
-  const [entryNotes, setEntryNotes] = useState("");
-  const [businessName, setBusinessName] = useState("");
+  const [fullName, setFullName] = useState(user?.profile?.fullName || "");
+  const [addressArea, setAddressArea] = useState(user?.profile?.addressArea || "");
+  const [society, setSociety] = useState(user?.profile?.society || "");
+  const [flatUnit, setFlatUnit] = useState(user?.profile?.flatUnit || "");
+  const [entryNotes, setEntryNotes] = useState(user?.profile?.entryNotes || "");
+  const [businessName, setBusinessName] = useState(user?.profile?.businessName || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +34,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
   const getValidationHint = () => {
     if (!fullName.trim()) return "Enter your full name to continue.";
     if (!addressArea.trim()) return "Enter your address & area to continue.";
+    if (addressArea.trim().length < 3) return "Address & area must be at least 3 characters.";
     return null;
   };
 
@@ -47,7 +48,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
       setLoading(true);
       setError(null);
 
-      const phoneToUse = user?.mobile || "+919876543210";
+      const phoneToUse = user?.mobile || "+916295474539";
 
       const res = await apiClient.post("/profile", {
         fullName: fullName.trim(),
@@ -63,8 +64,8 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
       if (res.data?.success) {
         updateUserProfile(res.data.data);
         navigation.reset({
-          index: 0,
-          routes: [{ name: "TaskSelection" }],
+          index: 1,
+          routes: [{ name: "Home" }, { name: "TaskSelection" }],
         });
       }
     } catch (err: any) {
@@ -77,13 +78,13 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.keyboardView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
         >
           {/* City Tag matching screenshot */}
           <Text style={styles.cityTag}>Mumbai</Text>
@@ -98,14 +99,20 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
           <InputField
             label="Full name"
             value={fullName}
-            onChangeText={setFullName}
+            onChangeText={(text) => {
+              setFullName(text);
+              if (error) setError(null);
+            }}
             placeholder="As you would like us to use"
           />
 
           <InputField
             label="Address & area"
             value={addressArea}
-            onChangeText={setAddressArea}
+            onChangeText={(text) => {
+              setAddressArea(text);
+              if (error) setError(null);
+            }}
             placeholder="Road, area, landmark"
           />
 
@@ -196,6 +203,11 @@ const styles = StyleSheet.create({
     color: Colors.errorText,
     fontSize: 13,
     marginBottom: 12,
+    backgroundColor: Colors.errorBg,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.errorBorder,
   },
   textArea: {
     minHeight: 70,

@@ -3,18 +3,20 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  TouchableOpacity,
+  Modal,
+  TextInput,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { BrandHeader } from "../components/BrandHeader";
 import { InputField } from "../components/InputField";
 import { Button } from "../components/Button";
-import { apiClient } from "../api/client";
+import { apiClient, setApiBaseUrl, LAN_API_URL, PUBLIC_API_URL } from "../api/client";
 
 interface WelcomeScreenProps {
   navigation: any;
@@ -25,6 +27,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState("b.c.chhandogi@gmail.com");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [customServerUrl, setCustomServerUrl] = useState(apiClient.defaults.baseURL || LAN_API_URL);
 
   const handleGetOtp = async () => {
     setError(null);
@@ -53,10 +57,17 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         });
       }
     } catch (err: any) {
-      setError(err.message || "Failed to send verification code. Please try again.");
+      setError(err.message || "Failed to connect to backend. Please check connection.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveServerUrl = async (url: string) => {
+    await setApiBaseUrl(url);
+    setCustomServerUrl(url);
+    setShowSettings(false);
+    setError(null);
   };
 
   return (
@@ -68,11 +79,22 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Main Card */}
-          <View style={styles.card}>
+          {/* Top Bar with Settings Gear */}
+          <View style={styles.topBar}>
             <BrandHeader showSubtitle={true} />
+            <TouchableOpacity
+              style={styles.gearButton}
+              onPress={() => setShowSettings(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
 
+          {/* Screen Content */}
+          <View style={styles.content}>
             <Text style={styles.title}>Welcome</Text>
             <Text style={styles.subtitle}>
               Enter your mobile number and email. We'll send the OTP to your email.
@@ -80,8 +102,13 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
 
             {error && (
               <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={18} color={Colors.errorText} />
-                <Text style={styles.errorText}>{error}</Text>
+                <Ionicons name="alert-circle" size={20} color={Colors.errorText} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.errorText}>{error}</Text>
+                  <TouchableOpacity onPress={() => setShowSettings(true)}>
+                    <Text style={styles.errorAction}>Tap here to switch backend server URL</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -90,7 +117,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
               prefix="+91"
               value={mobile}
               onChangeText={setMobile}
-              placeholder="e.g. 9876543210"
+              placeholder="6295474539"
               keyboardType="phone-pad"
               leftIcon={<Ionicons name="call-outline" size={18} color={Colors.textSecondary} />}
             />
@@ -99,7 +126,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
               label="Email"
               value={email}
               onChangeText={setEmail}
-              placeholder="name@example.com"
+              placeholder="b.c.chhandogi@gmail.com"
               keyboardType="email-address"
               autoCapitalize="none"
               leftIcon={<Ionicons name="mail-outline" size={18} color={Colors.textSecondary} />}
@@ -115,6 +142,57 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Backend Connection Modal for Seamless Device Switching */}
+      <Modal visible={showSettings} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Backend Server Connection</Text>
+            <Text style={styles.modalDesc}>
+              Select the active backend API address depending on whether your phone is on the same Wi-Fi or mobile data:
+            </Text>
+
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleSaveServerUrl(LAN_API_URL)}
+            >
+              <Text style={styles.optionTitle}>Wi-Fi LAN IP (Recommended for Home Wi-Fi)</Text>
+              <Text style={styles.optionSub}>{LAN_API_URL}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleSaveServerUrl(PUBLIC_API_URL)}
+            >
+              <Text style={styles.optionTitle}>Public Cloud Tunnel (For Mobile Data / Remote)</Text>
+              <Text style={styles.optionSub}>{PUBLIC_API_URL}</Text>
+            </TouchableOpacity>
+
+            <View style={{ marginTop: 12 }}>
+              <Text style={styles.fieldLabel}>Custom Server URL:</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={customServerUrl}
+                onChangeText={setCustomServerUrl}
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <Button
+                title="Use Custom URL"
+                onPress={() => handleSaveServerUrl(customServerUrl)}
+                style={{ marginBottom: 8 }}
+              />
+              <Button
+                title="Cancel"
+                variant="secondary"
+                onPress={() => setShowSettings(false)}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -122,55 +200,131 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    padding: 16,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 32,
+    justifyContent: "space-between",
   },
-  card: {
-    backgroundColor: Colors.cardBg,
+  topBar: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 8,
+  },
+  gearButton: {
+    padding: 8,
     borderRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: "#F1F5F9",
+  },
+  content: {
+    flex: 1,
+    justifyContent: "flex-start",
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: Colors.errorBg,
+    borderWidth: 1,
+    borderColor: Colors.errorBorder,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 20,
+    gap: 10,
+  },
+  errorText: {
+    color: Colors.errorText,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  errorAction: {
+    color: Colors.primaryGreen,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
+    textDecorationLine: "underline",
+  },
+  buttonWrapper: {
+    marginTop: 28,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 18,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.errorBg,
-    borderWidth: 1,
-    borderColor: Colors.errorBorder,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 16,
-    gap: 8,
-  },
-  errorText: {
-    color: Colors.errorText,
+  modalDesc: {
     fontSize: 13,
-    flex: 1,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 16,
   },
-  buttonWrapper: {
-    marginTop: 20,
+  optionButton: {
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    marginBottom: 10,
+  },
+  optionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+    marginBottom: 2,
+  },
+  optionSub: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+    marginBottom: 6,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  modalActions: {
+    marginTop: 8,
   },
 });

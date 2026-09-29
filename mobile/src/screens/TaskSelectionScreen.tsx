@@ -3,16 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { Button } from "../components/Button";
 import { apiClient } from "../api/client";
-import { Category, TaskItem } from "../types";
+import { Category } from "../types";
 
 interface TaskSelectionScreenProps {
   navigation: any;
@@ -108,91 +108,88 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Main Card Container matching web UI */}
-          <View style={styles.cardWrapper}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-back" size={18} color={Colors.primaryGreen} />
-              <Text style={styles.backText}>Back</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={20} color={Colors.primaryGreen} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
 
-            <Text style={styles.title}>What do you need help with?</Text>
-            <Text style={styles.subtitle}>
-              Pick a category, then choose a service. You can add details next.
-            </Text>
+          <Text style={styles.title}>What do you need help with?</Text>
+          <Text style={styles.subtitle}>
+            Pick a category, then choose a service. You can add details next.
+          </Text>
 
-            {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={styles.errorText}>{error}</Text>}
 
-            {/* Categories List */}
-            {categories.map((category) => {
-              const isExpanded = expandedCategoryId === category.id;
+          {/* Categories List */}
+          {categories.map((category) => {
+            const isExpanded = expandedCategoryId === category.id;
 
-              return (
-                <View
-                  key={category.id}
-                  style={[
-                    styles.categoryCard,
-                    isExpanded && styles.categoryCardExpanded,
-                  ]}
+            return (
+              <View
+                key={category.id}
+                style={[
+                  styles.categoryCard,
+                  isExpanded && styles.categoryCardExpanded,
+                ]}
+              >
+                <TouchableOpacity
+                  style={styles.categoryHeader}
+                  onPress={() => toggleCategory(category.id)}
+                  activeOpacity={0.8}
                 >
-                  <TouchableOpacity
-                    style={styles.categoryHeader}
-                    onPress={() => toggleCategory(category.id)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.iconBox}>{getCategoryIcon(category.icon)}</View>
-                    <View style={styles.categoryHeaderText}>
-                      <Text style={styles.categoryTitle}>{category.name}</Text>
-                      <Text style={styles.categoryDesc}>{category.description}</Text>
-                    </View>
-                  </TouchableOpacity>
+                  <View style={styles.iconBox}>{getCategoryIcon(category.icon)}</View>
+                  <View style={styles.categoryHeaderText}>
+                    <Text style={styles.categoryTitle}>{category.name}</Text>
+                    <Text style={styles.categoryDesc}>{category.description}</Text>
+                  </View>
+                </TouchableOpacity>
 
-                  {/* Expanded Sub-tasks ("WHAT KIND OF HELP?") matching screenshots */}
-                  {isExpanded && (
-                    <View style={styles.subTasksContainer}>
-                      <Text style={styles.subTasksHeader}>WHAT KIND OF HELP?</Text>
-                      <View style={styles.pillsWrap}>
-                        {category.tasks.map((task) => {
-                          const isSelected = selectedTaskIds.includes(task.id);
-                          return (
-                            <TouchableOpacity
-                              key={task.id}
+                {/* Expanded Sub-tasks ("WHAT KIND OF HELP?") matching screenshots */}
+                {isExpanded && (
+                  <View style={styles.subTasksContainer}>
+                    <Text style={styles.subTasksHeader}>WHAT KIND OF HELP?</Text>
+                    <View style={styles.pillsWrap}>
+                      {category.tasks.map((task) => {
+                        const isSelected = selectedTaskIds.includes(task.id);
+                        return (
+                          <TouchableOpacity
+                            key={task.id}
+                            style={[
+                              styles.taskPill,
+                              isSelected && styles.taskPillSelected,
+                            ]}
+                            onPress={() => toggleTask(task.id)}
+                            activeOpacity={0.75}
+                          >
+                            <Text
                               style={[
-                                styles.taskPill,
-                                isSelected && styles.taskPillSelected,
+                                styles.taskPillText,
+                                isSelected && styles.taskPillTextSelected,
                               ]}
-                              onPress={() => toggleTask(task.id)}
-                              activeOpacity={0.75}
                             >
-                              <Text
-                                style={[
-                                  styles.taskPillText,
-                                  isSelected && styles.taskPillTextSelected,
-                                ]}
-                              >
-                                {task.name}
-                              </Text>
-                              {isSelected && (
-                                <Ionicons
-                                  name="checkmark"
-                                  size={14}
-                                  color={Colors.white}
-                                  style={{ marginLeft: 4 }}
-                                />
-                              )}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
+                              {task.name}
+                            </Text>
+                            {isSelected && (
+                              <Ionicons
+                                name="checkmark"
+                                size={14}
+                                color={Colors.white}
+                                style={{ marginLeft: 4 }}
+                              />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
-                  )}
-                </View>
-              );
-            })}
-          </View>
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </ScrollView>
 
         {/* Sticky Bottom Bar matching screenshot */}
@@ -218,54 +215,51 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
     alignItems: "center",
     justifyContent: "center",
   },
   loadingText: {
     marginTop: 12,
-    color: Colors.white,
+    color: Colors.textSecondary,
     fontSize: 14,
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  cardWrapper: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 20,
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 110,
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     marginBottom: 16,
+    gap: 4,
   },
   backText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.primaryGreen,
-    marginLeft: 2,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "700",
+    fontSize: 30,
+    fontWeight: "800",
     color: Colors.textPrimary,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 20,
+    lineHeight: 22,
+    marginBottom: 24,
   },
   errorText: {
     color: Colors.errorText,
@@ -292,9 +286,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",
@@ -305,13 +299,14 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   categoryDesc: {
     fontSize: 13,
     color: Colors.textSecondary,
+    lineHeight: 18,
   },
   subTasksContainer: {
     paddingHorizontal: 16,
@@ -337,7 +332,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     borderRadius: 20,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
   taskPillSelected: {
     backgroundColor: Colors.primaryGreen,
@@ -356,8 +351,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.cardBg,
-    padding: 16,
+    backgroundColor: Colors.white,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: Colors.cardBorder,
   },

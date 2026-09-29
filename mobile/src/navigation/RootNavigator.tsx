@@ -19,7 +19,7 @@ export const RootNavigator: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: Colors.darkBg, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ flex: 1, backgroundColor: Colors.screenBg, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator size="large" color={Colors.primaryGreen} />
       </View>
     );
@@ -31,7 +31,7 @@ export const RootNavigator: React.FC = () => {
         screenOptions={{
           headerShown: false,
           animation: "fade",
-          contentStyle: { backgroundColor: Colors.darkBg },
+          contentStyle: { backgroundColor: Colors.screenBg },
         }}
       >
         {!token ? (

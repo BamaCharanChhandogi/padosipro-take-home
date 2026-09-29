@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { BrandHeader } from "../components/BrandHeader";
@@ -108,68 +108,67 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.card}>
-            {/* Top Navigation */}
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-back" size={18} color={Colors.primaryGreen} />
-              <Text style={styles.backText}>Back</Text>
-            </TouchableOpacity>
+          {/* Top Navigation */}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={20} color={Colors.primaryGreen} />
+            <Text style={styles.backText}>Back</Text>
+          </TouchableOpacity>
 
-            <BrandHeader showSubtitle={false} />
+          <BrandHeader showSubtitle={false} />
 
-            <Text style={styles.title}>Enter OTP</Text>
-            <Text style={styles.subtitle}>
-              We've sent a code to <Text style={styles.highlightText}>{email}</Text>. It expires in 10 minutes.
-            </Text>
+          <Text style={styles.title}>Enter OTP</Text>
+          <Text style={styles.subtitle}>
+            We've sent a code to <Text style={styles.highlightText}>{email}</Text>. It expires in 10 minutes.
+          </Text>
 
-            {error && (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={18} color={Colors.errorText} />
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-
-            <InputField
-              label="6-digit code"
-              value={otpCode}
-              onChangeText={(text) => {
-                setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6));
-                if (error) setError(null);
-              }}
-              placeholder="- - - - - -"
-              keyboardType="number-pad"
-              maxLength={6}
-              style={styles.otpInput}
-            />
-
-            <TouchableOpacity
-              onPress={handleResend}
-              disabled={!canResend}
-              style={styles.resendWrapper}
-            >
-              <Text
-                style={[
-                  styles.resendText,
-                  !canResend && { color: Colors.textMuted },
-                ]}
-              >
-                {canResend ? "Resend code" : `Resend code in ${countdown}s`}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.buttonWrapper}>
-              <Button
-                title={loading ? "Verifying..." : "Verify"}
-                onPress={handleVerify}
-                loading={loading}
-                disabled={otpCode.length < 6}
-              />
+          {error && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color={Colors.errorText} />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
+          )}
+
+          <InputField
+            label="6-digit code"
+            value={otpCode}
+            onChangeText={(text) => {
+              setOtpCode(text.replace(/[^0-9]/g, "").slice(0, 6));
+              if (error) setError(null);
+            }}
+            placeholder="- - - - - -"
+            keyboardType="number-pad"
+            maxLength={6}
+            style={styles.otpInput}
+          />
+
+          <TouchableOpacity
+            onPress={handleResend}
+            disabled={!canResend}
+            style={styles.resendWrapper}
+          >
+            <Text
+              style={[
+                styles.resendText,
+                !canResend && { color: Colors.textMuted },
+              ]}
+            >
+              {canResend ? "Resend code" : `Resend code in ${countdown}s`}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.buttonWrapper}>
+            <Button
+              title={loading ? "Verifying..." : "Verify"}
+              onPress={handleVerify}
+              loading={loading}
+              disabled={otpCode.length < 6}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -180,49 +179,41 @@ export const OtpVerificationScreen: React.FC<OtpVerificationScreenProps> = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    padding: 16,
-  },
-  card: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 32,
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    marginBottom: 16,
-    gap: 2,
+    marginBottom: 20,
+    gap: 4,
   },
   backText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 32,
+    fontWeight: "800",
     color: Colors.textPrimary,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 24,
+    lineHeight: 22,
+    marginBottom: 28,
   },
   highlightText: {
     fontWeight: "600",
@@ -245,15 +236,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   otpInput: {
-    fontSize: 22,
+    fontSize: 24,
     letterSpacing: 10,
     textAlign: "left",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   resendWrapper: {
     alignSelf: "flex-start",
     marginTop: 4,
-    marginBottom: 20,
+    marginBottom: 24,
   },
   resendText: {
     fontSize: 14,

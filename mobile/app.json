@@ -25,6 +25,9 @@
         "projectId": "94861e70-8163-4ef2-b94d-14bafbe1bbb6"
       }
     },
-    "owner": "bamacharanchhandogis-team"
+    "owner": "bamacharanchhandogis-team",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User, Profile } from "../types";
 import { apiClient } from "../api/client";
+import { Storage } from "../utils/storage";
 
 interface AuthContextType {
   user: User | null;
@@ -27,8 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem(TOKEN_KEY);
-        const storedUser = await AsyncStorage.getItem(USER_KEY);
+        const storedToken = await Storage.getItem(TOKEN_KEY);
+        const storedUser = await Storage.getItem(USER_KEY);
 
         if (storedToken && storedUser) {
           setToken(storedToken);
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const res = await apiClient.get("/auth/me");
             if (res.data?.data) {
               setUser(res.data.data);
-              await AsyncStorage.setItem(USER_KEY, JSON.stringify(res.data.data));
+              await Storage.setItem(USER_KEY, JSON.stringify(res.data.data));
             }
           } catch (err: any) {
             // If token expired, logout
@@ -61,8 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithToken = async (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
-    await AsyncStorage.setItem(TOKEN_KEY, newToken);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser));
+    await Storage.setItem(TOKEN_KEY, newToken);
+    await Storage.setItem(USER_KEY, JSON.stringify(newUser));
   };
 
   const updateUserProfile = (newProfile: Profile) => {
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile: newProfile,
       };
       setUser(updatedUser);
-      AsyncStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      Storage.setItem(USER_KEY, JSON.stringify(updatedUser));
     }
   };
 
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await apiClient.get("/auth/me");
       if (res.data?.data) {
         setUser(res.data.data);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(res.data.data));
+        await Storage.setItem(USER_KEY, JSON.stringify(res.data.data));
       }
     } catch (err) {
       console.warn("Could not refresh user info", err);
@@ -92,8 +92,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     setToken(null);
     setUser(null);
-    await AsyncStorage.removeItem(TOKEN_KEY);
-    await AsyncStorage.removeItem(USER_KEY);
+    await Storage.removeItem(TOKEN_KEY);
+    await Storage.removeItem(USER_KEY);
   };
 
   return (

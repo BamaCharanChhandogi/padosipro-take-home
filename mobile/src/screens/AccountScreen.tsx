@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { useAuth } from "../context/AuthContext";
@@ -46,75 +46,73 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   };
 
   const profile = user?.profile;
-  const phoneNumber = profile?.phone || user?.mobile || "+91 9876543210";
+  const phoneNumber = profile?.phone || user?.mobile || "+91 6295474539";
   const userCity = profile?.city || "Mumbai";
-  const userName = profile?.fullName || "User";
+  const userName = profile?.fullName || "Bama";
   const flatDetails = profile?.flatUnit ? `Flat / unit: ${profile.flatUnit}` : "Residence";
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          {/* Back Navigation */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chevron-back" size={18} color={Colors.primaryGreen} />
-            <Text style={styles.backText}>Back</Text>
-          </TouchableOpacity>
+        {/* Back Navigation */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={20} color={Colors.primaryGreen} />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.title}>Account</Text>
+        <Text style={styles.title}>Account</Text>
 
-          {/* Signed in as Card */}
-          <View style={styles.infoCard}>
-            <Text style={styles.cardLabel}>Signed in as</Text>
-            <Text style={styles.cardValue}>{phoneNumber}</Text>
-          </View>
+        {/* Signed in as Card */}
+        <View style={styles.infoCard}>
+          <Text style={styles.cardLabel}>Signed in as</Text>
+          <Text style={styles.cardValue}>{phoneNumber}</Text>
+        </View>
 
-          {/* Your LM Card */}
-          <View style={styles.infoCard}>
-            <Text style={styles.cardLabel}>Your LM</Text>
-            <Text style={styles.cardValue}>Pilot LM</Text>
-            <Text style={styles.cardSubText}>{userCity}</Text>
-            <Text style={styles.cardSubText}>{userName}</Text>
-            <Text style={styles.cardSubText}>{flatDetails}</Text>
-          </View>
+        {/* Your LM Card */}
+        <View style={styles.infoCard}>
+          <Text style={styles.cardLabel}>Your LM</Text>
+          <Text style={styles.cardValue}>Pilot LM</Text>
+          <Text style={styles.cardSubText}>{userCity}</Text>
+          <Text style={styles.cardSubText}>{userName}</Text>
+          <Text style={styles.cardSubText}>{flatDetails}</Text>
+        </View>
 
-          {/* Household Card */}
-          <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
-            <View style={styles.actionCardLeft}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="people-outline" size={20} color={Colors.primaryGreen} />
-              </View>
-              <View>
-                <Text style={styles.actionTitle}>Household</Text>
-                <Text style={styles.actionSub}>Family members your LM should know about</Text>
-              </View>
+        {/* Household Card */}
+        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+          <View style={styles.actionCardLeft}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="people-outline" size={20} color={Colors.primaryGreen} />
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-
-          {/* Wallet Card */}
-          <View style={styles.infoCard}>
-            <Text style={styles.cardLabel}>Wallet</Text>
-            <Text style={styles.cardValue}>Coming soon</Text>
-            <Text style={styles.walletDesc}>
-              Wallet top-up isn't turned on yet. Your Lifestyle Manager can still handle requests
-              and send you the bill directly in the meantime.
-            </Text>
+            <View>
+              <Text style={styles.actionTitle}>Household</Text>
+              <Text style={styles.actionSub}>Family members your LM should know about</Text>
+            </View>
           </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
 
-          {/* Sign Out Button matching media_1790651548688.png */}
-          <View style={styles.buttonWrapper}>
-            <Button
-              title="Sign out"
-              variant="dangerOutline"
-              onPress={handleLogout}
-              loading={loggingOut}
-            />
-          </View>
+        {/* Wallet Card */}
+        <View style={styles.infoCard}>
+          <Text style={styles.cardLabel}>Wallet</Text>
+          <Text style={styles.cardValue}>Coming soon</Text>
+          <Text style={styles.walletDesc}>
+            Wallet top-up isn't turned on yet. Your Lifestyle Manager can still handle requests
+            and send you the bill directly in the meantime.
+          </Text>
+        </View>
+
+        {/* Sign Out Button matching media_1790651548688.png */}
+        <View style={styles.buttonWrapper}>
+          <Button
+            title="Sign out"
+            variant="dangerOutline"
+            onPress={handleLogout}
+            loading={loggingOut}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -124,45 +122,38 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
   },
   scrollContent: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     marginBottom: 16,
+    gap: 4,
   },
   backText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.primaryGreen,
-    marginLeft: 2,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 32,
+    fontWeight: "800",
     color: Colors.textPrimary,
     marginBottom: 20,
+    letterSpacing: -0.5,
   },
   infoCard: {
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
   },
   cardLabel: {
@@ -172,13 +163,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardValue: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   cardSubText: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -190,7 +181,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
   },
   actionCardLeft: {
@@ -200,9 +191,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",
@@ -224,6 +215,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   buttonWrapper: {
-    marginTop: 12,
+    marginTop: 16,
   },
 });

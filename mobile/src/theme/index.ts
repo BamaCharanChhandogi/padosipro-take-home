@@ -3,7 +3,8 @@
  * Extracted directly from production screenshots
  */
 export const Colors = {
-  // App background
+  // Mobile App Native screen background (warm off-white/cream)
+  screenBg: "#FAFAF8",
   darkBg: "#1F242D",
   cardBg: "#FAFAF8",
   cardBorder: "#E2E8F0",

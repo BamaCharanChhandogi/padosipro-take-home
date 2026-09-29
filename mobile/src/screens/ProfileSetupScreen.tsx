@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../theme";
 import { InputField } from "../components/InputField";
 import { Button } from "../components/Button";
@@ -83,76 +83,75 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.card}>
-            {/* City Tag matching screenshot */}
-            <Text style={styles.cityTag}>Mumbai</Text>
+          {/* City Tag matching screenshot */}
+          <Text style={styles.cityTag}>Mumbai</Text>
 
-            <Text style={styles.title}>A few details</Text>
-            <Text style={styles.subtitle}>
-              So your Lifestyle Manager can coordinate visits and deliveries smoothly.
-            </Text>
+          <Text style={styles.title}>A few details</Text>
+          <Text style={styles.subtitle}>
+            So your Lifestyle Manager can coordinate visits and deliveries smoothly.
+          </Text>
 
-            {error && <Text style={styles.serverError}>{error}</Text>}
+          {error && <Text style={styles.serverError}>{error}</Text>}
 
-            <InputField
-              label="Full name"
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="As you would like us to use"
+          <InputField
+            label="Full name"
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="As you would like us to use"
+          />
+
+          <InputField
+            label="Address & area"
+            value={addressArea}
+            onChangeText={setAddressArea}
+            placeholder="Road, area, landmark"
+          />
+
+          <InputField
+            label="Society / building (optional)"
+            value={society}
+            onChangeText={setSociety}
+            placeholder="Name as on the gate"
+          />
+
+          <InputField
+            label="Flat / unit (optional)"
+            value={flatUnit}
+            onChangeText={setFlatUnit}
+            placeholder="e.g. Tower B, 1204"
+          />
+
+          <InputField
+            label="Gate or entry notes (optional)"
+            value={entryNotes}
+            onChangeText={setEntryNotes}
+            placeholder="Anything the team should know at entry"
+            multiline
+            numberOfLines={3}
+            style={styles.textArea}
+          />
+
+          <InputField
+            label="Business name (optional)"
+            value={businessName}
+            onChangeText={setBusinessName}
+            placeholder="Optional: Company or firm name"
+          />
+
+          {/* Inline validation hint matching screenshot */}
+          {validationHint ? (
+            <Text style={styles.validationHint}>{validationHint}</Text>
+          ) : null}
+
+          <View style={styles.buttonWrapper}>
+            <Button
+              title={loading ? "Saving..." : "Continue"}
+              onPress={handleSaveProfile}
+              disabled={!canContinue}
+              loading={loading}
             />
-
-            <InputField
-              label="Address & area"
-              value={addressArea}
-              onChangeText={setAddressArea}
-              placeholder="Road, area, landmark"
-            />
-
-            <InputField
-              label="Society / building (optional)"
-              value={society}
-              onChangeText={setSociety}
-              placeholder="Name as on the gate"
-            />
-
-            <InputField
-              label="Flat / unit (optional)"
-              value={flatUnit}
-              onChangeText={setFlatUnit}
-              placeholder="e.g. Tower B, 1204"
-            />
-
-            <InputField
-              label="Gate or entry notes (optional)"
-              value={entryNotes}
-              onChangeText={setEntryNotes}
-              placeholder="Anything the team should know at entry"
-              multiline
-              numberOfLines={3}
-              style={styles.textArea}
-            />
-
-            <InputField
-              label="Business name (optional)"
-              value={businessName}
-              onChangeText={setBusinessName}
-              placeholder="Optional: Company or firm name"
-            />
-
-            {/* Inline validation hint matching screenshot */}
-            {validationHint ? (
-              <Text style={styles.validationHint}>{validationHint}</Text>
-            ) : null}
-
-            <View style={styles.buttonWrapper}>
-              <Button
-                title={loading ? "Saving..." : "Continue"}
-                onPress={handleSaveProfile}
-                disabled={!canContinue}
-                loading={loading}
-              />
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -163,25 +162,16 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.darkBg,
+    backgroundColor: Colors.screenBg,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    padding: 16,
-  },
-  card: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 40,
   },
   cityTag: {
     fontSize: 13,
@@ -190,16 +180,17 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 32,
+    fontWeight: "800",
     color: Colors.textPrimary,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 20,
+    lineHeight: 22,
+    marginBottom: 24,
   },
   serverError: {
     color: Colors.errorText,
@@ -207,16 +198,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   textArea: {
-    minHeight: 64,
+    minHeight: 70,
     textAlignVertical: "top",
   },
   validationHint: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textSecondary,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   buttonWrapper: {
-    marginTop: 4,
+    marginTop: 8,
   },
 });

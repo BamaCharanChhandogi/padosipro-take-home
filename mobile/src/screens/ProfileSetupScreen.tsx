@@ -6,6 +6,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../theme";
@@ -40,13 +41,14 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
   const canContinue = !validationHint;
 
   const handleSaveProfile = async () => {
+    Keyboard.dismiss();
     if (!canContinue) return;
 
     try {
       setLoading(true);
       setError(null);
 
-      const phoneToUse = user?.mobile || "+916295474539";
+      const phoneToUse = user?.profile?.phone || user?.mobile || "+916295474539";
 
       const res = await apiClient.post("/profile", {
         fullName: fullName.trim(),
@@ -61,10 +63,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
 
       if (res.data?.success) {
         updateUserProfile(res.data.data);
-        navigation.reset({
-          index: 1,
-          routes: [{ name: "Home" }, { name: "TaskSelection" }],
-        });
+        navigation.navigate("TaskSelection");
       }
     } catch (err: any) {
       setError(err.message || "Failed to save profile details.");
@@ -82,7 +81,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="always"
+          keyboardShouldPersistTaps="handled"
         >
           {/* City Tag matching screenshot */}
           <Text style={styles.cityTag}>Mumbai</Text>

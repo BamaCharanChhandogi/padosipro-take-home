@@ -393,10 +393,17 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
       </View>
 
       {/* Business Flow Modal: Task Details & Schedule */}
-      <Modal visible={showConfirmModal} transparent animationType="slide">
+      <Modal
+        visible={showConfirmModal}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
           style={styles.modalOverlay}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
@@ -416,7 +423,12 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={{ maxHeight: 300 }}
+              contentContainerStyle={{ paddingBottom: 12 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.selectedTasksHeader}>SELECTED SERVICES ({selectedTaskObjects.length}):</Text>
               {selectedTaskObjects.map((t) => (
                 <View key={t.id} style={styles.confirmTaskRow}>
@@ -472,10 +484,17 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
       </Modal>
 
       {/* Custom Request Modal */}
-      <Modal visible={showCustomModal} transparent animationType="slide">
+      <Modal
+        visible={showCustomModal}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        onRequestClose={() => setShowCustomModal(false)}
+      >
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior="padding"
           style={styles.modalOverlay}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
@@ -495,15 +514,22 @@ export const TaskSelectionScreen: React.FC<TaskSelectionScreenProps> = ({ naviga
               </TouchableOpacity>
             </View>
 
-            <TextInput
-              style={styles.customTextInput}
-              placeholder="e.g. Need help collecting dry cleaning, picking up spare keys, or arranging a technician..."
-              placeholderTextColor={Colors.textMuted}
-              value={customRequestText}
-              onChangeText={setCustomRequestText}
-              multiline
-              numberOfLines={4}
-            />
+            <ScrollView
+              style={{ maxHeight: 220 }}
+              contentContainerStyle={{ paddingBottom: 10 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <TextInput
+                style={styles.customTextInput}
+                placeholder="e.g. Need help collecting dry cleaning, picking up spare keys, or arranging a technician..."
+                placeholderTextColor={Colors.textMuted}
+                value={customRequestText}
+                onChangeText={setCustomRequestText}
+                multiline
+                numberOfLines={4}
+              />
+            </ScrollView>
 
             <View style={styles.modalFooterActions}>
               <Button
@@ -831,7 +857,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 36,
+    paddingBottom: Platform.OS === "android" ? 28 : 36,
+    maxHeight: "90%",
   },
   modalHeader: {
     flexDirection: "row",

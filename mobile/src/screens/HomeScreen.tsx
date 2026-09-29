@@ -73,18 +73,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     );
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${greetingMsg}`;
 
-    Linking.canOpenURL(whatsappUrl)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(whatsappUrl);
-        } else {
-          Alert.alert("WhatsApp Chat", `Pilot LM Hotline: +${whatsappNumber}`);
-          Linking.openURL(`tel:+${whatsappNumber}`);
-        }
-      })
-      .catch(() => {
-        Alert.alert("Lifestyle Manager Support", `Pilot LM Hotline: +${whatsappNumber}`);
-      });
+    Linking.openURL(whatsappUrl).catch((err) => {
+      console.warn("Could not open WhatsApp URL:", err);
+    });
   };
 
   const categoriesChips = [

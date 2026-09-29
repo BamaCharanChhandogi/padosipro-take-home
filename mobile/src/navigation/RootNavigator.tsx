@@ -40,16 +40,18 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
           </>
-        ) : !user?.hasCompletedProfile ? (
-          // First-login Profile Gate
-          <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         ) : (
-          // Authenticated Main App Stack
+          // Authenticated Main App Stack - all screens available
           <>
+            {!user?.hasCompletedProfile && (
+              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+            )}
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="TaskSelection" component={TaskSelectionScreen} />
             <Stack.Screen name="Account" component={AccountScreen} />
-            <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+            {user?.hasCompletedProfile && (
+              <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
+            )}
           </>
         )}
       </Stack.Navigator>

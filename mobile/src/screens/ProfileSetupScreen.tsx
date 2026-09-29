@@ -7,8 +7,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../theme";
 import { InputField } from "../components/InputField";
 import { Button } from "../components/Button";
@@ -17,10 +19,12 @@ import { useAuth } from "../context/AuthContext";
 
 interface ProfileSetupScreenProps {
   navigation: any;
+  route?: any;
 }
 
-export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigation }) => {
+export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigation, route }) => {
   const { user, updateUserProfile } = useAuth();
+  const isEditing = route?.params?.isEditing ?? user?.hasCompletedProfile ?? false;
 
   const [fullName, setFullName] = useState(user?.profile?.fullName || "");
   const [addressArea, setAddressArea] = useState(user?.profile?.addressArea || "");
@@ -71,7 +75,15 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
 
       if (res.data?.success) {
         updateUserProfile(res.data.data);
-        navigation.navigate("TaskSelection");
+        if (isEditing) {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate("Account");
+          }
+        } else {
+          navigation.navigate("TaskSelection");
+        }
       }
     } catch (err: any) {
       setError(err.message || "Failed to save profile details.");
@@ -91,12 +103,26 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Back button if editing and can go back */}
+          {isEditing && navigation.canGoBack() && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={20} color={Colors.primaryGreen} />
+              <Text style={styles.backText}>Back</Text>
+            </TouchableOpacity>
+          )}
+
           {/* City Tag matching screenshot */}
           <Text style={styles.cityTag}>Mumbai</Text>
 
-          <Text style={styles.title}>A few details</Text>
+          <Text style={styles.title}>{isEditing ? "Edit profile" : "A few details"}</Text>
           <Text style={styles.subtitle}>
-            So your Lifestyle Manager can coordinate visits and deliveries smoothly.
+            {isEditing
+              ? "Update your details so your Lifestyle Manager has your latest information."
+              : "So your Lifestyle Manager can coordinate visits and deliveries smoothly."}
           </Text>
 
           {error && <Text style={styles.serverError}>{error}</Text>}
@@ -174,7 +200,7 @@ export const ProfileSetupScreen: React.FC<ProfileSetupScreenProps> = ({ navigati
 
           <View style={styles.buttonWrapper}>
             <Button
-              title={loading ? "Saving..." : "Continue"}
+              title={loading ? "Saving..." : isEditing ? "Save Changes" : "Continue"}
               onPress={handleSaveProfile}
               disabled={!canContinue}
               loading={loading}
@@ -193,6 +219,18 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    alignSelf: "flex-start",
+  },
+  backText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+    marginLeft: 4,
   },
   scrollContent: {
     flexGrow: 1,

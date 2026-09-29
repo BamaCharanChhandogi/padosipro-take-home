@@ -81,7 +81,7 @@ export const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
             <Text style={styles.cardLabel}>Your LM</Text>
             <TouchableOpacity
               style={styles.editBtn}
-              onPress={() => navigation.navigate("ProfileSetup")}
+              onPress={() => navigation.navigate("ProfileSetup", { isEditing: true })}
               activeOpacity={0.7}
             >
               <Ionicons name="create-outline" size={14} color={Colors.primaryGreen} />

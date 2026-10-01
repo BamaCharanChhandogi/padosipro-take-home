@@ -17,7 +17,7 @@ services:
       - SMTP_PORT=587
       - SMTP_SECURE=false
       - SMTP_USER=b.c.chhandogi@gmail.com
-      - SMTP_PASS=dbubbzjsbqohxtyg
+      - SMTP_PASS=iomwcjljulpzytbe
       - EMAIL_FROM=PadosiPro <b.c.chhandogi@gmail.com>
     volumes:
       - padosipro_db:/app/prisma
